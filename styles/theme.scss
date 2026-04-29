@@ -1,0 +1,44 @@
+@use "./variables" as *;
+@use "./sidenav.scss" as *;
+
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+// @import "~bootstrap/scss/functions";
+ 
+// User Variables
+// @import "user-variables";
+ 
+// theme variables
+// @import "theme/variables";
+ 
+// theme utilitiles
+// @import "theme/utilities";
+ 
+// @import "~bootstrap/scss/functions";
+// @import "~bootstrap/scss/variables";
+// @import "~bootstrap/scss/maps";
+// @import "~bootstrap/scss/mixins";
+// @import "~bootstrap/scss/utilities";
+// @import "~bootstrap/scss/utilities/api";
+// Bootstrap
+// @import "~bootstrap/scss/bootstrap";
+ 
+// Theme
+// @import "theme/theme";
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+ 
+* {
+  font-family: 'Figtree', sans-serif;
+}
+ 
+.bg-dashboard {
+  background-color: $background;
+}
+ 
+.primary {
+  color: $primary;
+}
+ 
+.light {
+  color: $light;
+} 
