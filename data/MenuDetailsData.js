@@ -1,17 +1,16 @@
 export const menuDetails = {
   id: 1,
-  name: "Mango Coconut Smoothie Bowl",
-  category: "Beverages",
-  subCategory: "Dessert",
-  image: "",
-  price: 9.0,
+  title: "Mango Coconut Smoothie Bowl",
+  image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtGgkWxzOcI7SddCHMe3jWv-nfJgXpuSZZFQ&s",
+  categoryText: "Beverages, Dessert",
   tag: "Customizable",
+  price: 9,
   rating: 4.6,
-  reviewsCount: 85,
-  ordersCount: 120,
-  favoritesCount: 45,
+  reviews: 85,
+  orders: 120,
+  favorites: 45,
   description:
-    "Refreshing and tropical smoothie bowl with a hint of coconut, topped with fresh fruits. Perfect for a light meal or a cool dessert.",
+    "Refreshing and tropical smoothie bowl with a hint of coconut, topped with fresh fruit. Perfect for a light meal or a cool dessert.",
   values: [
     "Tropical & Refreshing",
     "Creamy & Indulgent",
@@ -20,12 +19,12 @@ export const menuDetails = {
     "Energizing",
     "Versatile & Customizable",
   ],
-  nutrition: {
-    calories: "320 Kcal",
-    proteins: "5 gram",
-    fats: "12 gram",
-    carbs: "50 gram",
-  },
+  nutrition: [
+    { label: "Calories", value: "320", unit: "Kcal" },
+    { label: "Proteins", value: "5", unit: "gram" },
+    { label: "Fats", value: "12", unit: "gram" },
+    { label: "Carbo", value: "50", unit: "gram" },
+  ],
   ingredients: [
     "Mango",
     "Coconut milk",
@@ -37,88 +36,74 @@ export const menuDetails = {
   ],
 };
 
-export const menuOrdersOverview = {
-  ordersOverview: {
-    period: "This Week",
-    chartData: [
-      { day: "Mon", orders: 14 },
-      { day: "Sun", orders: 12 },
-      { day: "Wed", orders: 9 },
-      { day: "Thu", orders: 13 },
-      { day: "Fri", orders: 15 },
-      { day: "Sat", orders: 17 },
-      { day: "Sun", orders: 13 },
-    ],
-  },
-};
+export const orderChart = [
+  { day: "Mon", value: 14 },
+  { day: "Sun", value: 12 },
+  { day: "Wed", value: 9 },
+  { day: "Thu", value: 13 },
+  { day: "Fri", value: 15 },
+  { day: "Sat", value: 17 },
+  { day: "Sun", value: 13 },
+];
 
 export const similarMenus = [
-    {
-      id: 1,
-      name: "Nuts Berries Oatmeal",
-      category: "Dessert",
-      image: "",
-      rating: 4.7,
-      price: 10.0,
-    },
-    {
-      id: 2,
-      name: "Pineapple Paradise Smoothie",
-      category: "Beverages",
-      image: "",
-      rating: 4.5,
-      price: 8.0,
-    },
-    {
-      id: 3,
-      name: "Green Detox Juice",
-      category: "Beverages",
-      image: "",
-      rating: 4.2,
-      price: 7.0,
-    },
-    {
-      id: 4,
-      name: "Tropical Fruit Salad",
-      category: "Dessert",
-      image: "",
-      rating: 4.6,
-      price: 7.0,
-    },
-];
-
-export const menuReviews = [
   {
-      id: 1,
-      userName: "Sarah L.",
-      location: "Oct 15,2035",
-      rating: 5,
-      review:
-        "Absolutely delicious! The mango and coconut flavors are refreshing and perfectly balanced.",
-    },
-    {
-      id: 2,
-      userName: "Michael T.",
-      location: "Oct 15,2034",
-      rating: 4,
-      review:
-        "Very tasty and refreshing. Would love a larger portion. Great choice for a summer day!",
-    },
-    {
-      id: 3,
-      userName: "Emily R.",
-      location: "Oct 15,2033",
-      rating: 4,
-      review:
-        "Loved the fresh taste and light texture. It’s just the right mix of sweet and healthy.",
-    },
+    id: 1,
+    title: "Nuts Berries Oatmeal",
+    category: "Dessert",
+    image:"https://joybauer.com/wp-content/uploads/2017/12/Oatmeal-with-berries2-500x500.jpg",
+    rating: 4.7,
+    price: 10,
+  },
+  {
+    id: 2,
+    title: "Pineapple Paradise Smoothie",
+    category: "Beverages",
+    image:"https://images.getrecipekit.com/20240109011427-soaps-20squared-20-1.png?width=650&quality=90&",
+    rating: 4.5,
+    price: 8,
+  },
+  {
+    id: 3,
+    title: "Green Detox Juice",
+    category: "Beverages",
+    image:"https://liliebakery.fr/wp-content/uploads/2021/05/Jus-Vert-Detox-Extracteur-de-Jus-Lilie-Bakery.jpg",
+    rating: 4.2,
+    price: 7,
+  },
+  {
+    id: 4,
+    title: "Tropical Fruit Salad",
+    category: "Dessert",
+    image:"https://www.jessicagavin.com/wp-content/uploads/2021/06/tropical-fruit-salad-26-1200.jpg",
+    rating: 4.6,
+    price: 7,
+  },
 ];
 
-const MenuDetailsData = {
-  menuDetails,
-  menuOrdersOverview,
-  similarMenus,
-  menuReviews,
-};
-
-export default MenuDetailsData
+export const reviews = [
+  {
+    id: 1,
+    name: "Sarah L.",
+    image: "https://randomuser.me/api/portraits/women/44.jpg",
+    date: "Oct 15, 2035",
+    rating: 5,
+    text: "Absolutely delicious! The mango and coconut flavors are refreshing and perfectly balanced.",
+  },
+  {
+    id: 2,
+    name: "Michael T.",
+    image: "https://randomuser.me/api/portraits/men/32.jpg",
+    date: "Oct 15, 2034",
+    rating: 4,
+    text: "Very tasty and refreshing. Would love a larger portion. Great choice for a summer day!",
+  },
+  {
+    id: 3,
+    name: "Emily R.",
+    image: "https://randomuser.me/api/portraits/women/65.jpg",
+    date: "Oct 15, 2033",
+    rating: 4,
+    text: "Loved the fresh taste and light texture. It’s just the right mix of sweet and healthy.",
+  },
+];
