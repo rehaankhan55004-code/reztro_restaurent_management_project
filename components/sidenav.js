@@ -12,45 +12,52 @@ import {
   Grid,
   Calendar3,
   BoxSeam,
-  StarFill,
   ChevronDown,
   BoxArrowRight,
   ReceiptCutoff,
   ChatLeftText,
   WindowStack,
+
 } from "react-bootstrap-icons";
+import { Star } from "lucide-react";
+
 
 
 export default function Sidenav() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="d-none d-lg-flex p-4 flex-column vh-100 border-end">
+      <div className="d-none d-lg-flex p-4 flex-column h-100 border-end">
 
         <Link href="/dashboard" className="mb-5 text-decoration-none">
           <Image src={Logo} alt="Logo" width={170} height={50} priority />
         </Link>
 
-        <SidebarMenu />
+        <div className="d-flex flex-column flex-grow-1">
 
-        {/* Bottom Upgrade Card */}
-        <div className="mt-auto p-3 rounded-4 bg-success d-flex flex-column align-items-center">
-          <p className="small mb-3 mt-5 ">
-            Streamline restaurant <br />
-            management with real- <br />
-            time insights.
-          </p>
+          <div className="flex-grow-1 ">
+            <SidebarMenu />
+          </div>
 
-          <button className="btn btn-primary text-white rounded-3 w-100 ">
-            Upgrade Now
-          </button>
+          <div className="mt-auto p-3 rounded-4 bg-success d-flex flex-column align-items-center">
+            <p className="small mb-3 mt-5">
+              Streamline restaurant <br />
+              management with real- <br />
+              time insights.
+            </p>
+
+            <button className="btn btn-primary text-white rounded-3 w-100">
+              Upgrade Now
+            </button>
+          </div>
+
         </div>
-
       </div>
 
 
       {/* Tablet Icon Sidebar */}
-      <div className="d-none d-md-flex d-lg-none p-3 flex-column vh-100 align-items-center border-end">
+      {/* Tablet Icon Sidebar */}
+      <div className="d-none d-md-flex d-lg-none p-3 flex-column h-100 align-items-center border-end">
 
         <Link href="/dashboard" className="mb-5">
           <Image
@@ -62,20 +69,26 @@ export default function Sidenav() {
           />
         </Link>
 
-        <SidebarMenu iconsOnly />
+        {/* 👇 Wrap like desktop */}
+        <div className="d-flex flex-column flex-grow-1 align-items-center w-100">
 
-        <div className="mt-auto">
+          {/* Menu */}
+          <div className="flex-grow-1 d-flex flex-column align-items-center w-100">
+            <SidebarMenu iconsOnly />
+          </div>
 
-          <Button
-            type="button"
-            className="btn border-0 bg-transparent text-secondary d-flex justify-content-center align-items-center rounded-3 p-2"
-            style={{ width: "42px", height: "42px" }}
-          >
-            <BoxArrowRight size={20} />
-          </Button>
+          {/* Bottom button */}
+          <div className="mt-auto">
+            <Button
+              type="button"
+              className="btn border-0 bg-transparent text-secondary d-flex justify-content-center align-items-center rounded-3 p-2"
+              style={{ width: "42px", height: "42px" }}
+            >
+              <BoxArrowRight size={20} />
+            </Button>
+          </div>
 
         </div>
-
       </div>
     </>
   );
@@ -130,7 +143,8 @@ function SidebarMenu({ iconsOnly = false }) {
       {iconsOnly ? (
         <Link
           href="/orders"
-          className={`nav-link sidebar-link border-0 d-flex justify-content-center align-items-center rounded-3 p-2 fw-semibold ${pathname === "/orders"
+          className={`nav-link sidebar-link border-0 d-flex justify-content-center align-items-center rounded-3 p-2 fw-semibold ${pathname === "/orders" ||
+            pathname.includes("/orderdetails")
             ? "text-white bg-primary"
             : "text-secondary"
             }`}
@@ -141,7 +155,8 @@ function SidebarMenu({ iconsOnly = false }) {
       ) : (
         <Link
           href="/orders"
-          className={`nav-link sidebar-link fw-semibold ${pathname === "/orders"
+          className={`nav-link sidebar-link fw-semibold ${pathname === "/orders" ||
+            pathname.includes("/orderdetails")
             ? "active-sidebar"
             : "text-secondary"
             }`}
@@ -205,19 +220,19 @@ function SidebarMenu({ iconsOnly = false }) {
         <Link
           href="/menu"
           className={`nav-link sidebar-link border-0 d-flex justify-content-center align-items-center rounded-3 p-2 fw-semibold ${pathname === "/menu"
-              ? "text-white bg-primary"
-              : "text-secondary"
+            ? "text-white bg-primary"
+            : "text-secondary"
             }`}
           style={{ width: "42px", height: "42px" }}
         >
-          <WindowStack />   
+          <WindowStack />
         </Link>
       ) : (
         <Link
           href="/menu"
           className={`nav-link sidebar-link fw-semibold ${pathname === "/menu"
-              ? "active-sidebar"
-              : "text-secondary"
+            ? "active-sidebar"
+            : "text-secondary"
             }`}
         >
           <WindowStack className="me-2" />
@@ -298,7 +313,7 @@ function SidebarMenu({ iconsOnly = false }) {
             }`}
           style={{ width: "42px", height: "42px" }}
         >
-          <StarFill />
+          <Star size={20} />
         </Link>
       ) : (
         <Link
@@ -308,7 +323,7 @@ function SidebarMenu({ iconsOnly = false }) {
             : "text-secondary"
             }`}
         >
-          <StarFill className="me-2" />
+          <Star className="me-2" size={20} />
           {!iconsOnly && " Reviews"}
         </Link>
       )}
