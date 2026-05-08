@@ -1,34 +1,28 @@
-import Sidenav from "@/components/sidenav";
-import Header from "@/components/header";
 import Footer from "@/components/footer";
+import Header from "@/components/header";
+import Sidenav from "@/components/sidenav";
 
 export default function Layout({ children }) {
   return (
     <div className="d-flex min-vh-100">
 
-      {/* Sidebar */}
-      <aside className="d-none d-md-block">
+      <aside className="d-none d-md-flex flex-column flex-shrink-0">
         <Sidenav />
       </aside>
 
-
-      {/* Main Content */}
-      <div className="flex-grow-1 d-flex flex-column bg-dashboard min-vh-100">
+       <div className="flex-grow-1 d-flex flex-column min-vh-100 bg-dashboard main-layout">
 
         <Header />
 
-        <main className="flex-grow-1 p-4">
+        <main className="flex-grow-1 d-flex flex-column mx-4">
           {children}
         </main>
 
         <Footer />
-
       </div>
-
     </div>
   );
 }
-
 
 // import { Container, Row, Col } from "react-bootstrap";
 // import Sidenav from "@/components/sidenav";

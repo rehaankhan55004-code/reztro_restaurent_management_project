@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
     Navbar,
@@ -26,14 +26,25 @@ import {
     BoxSeam,
     StarFill,
     Search,
-    Gear
+    Gear,
+    ArrowBarLeft,
+    ArrowLeft
 } from "react-bootstrap-icons";
 
 export default function Header() {
     const [show, setShow] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
+    const isActive = (path) => {
+        if (path === "/orders") {
+            return (
+                pathname === "/orders" ||
+                pathname.includes("/orderdetails")
+            );
+        }
 
-    const isActive = (path) => pathname === path;
+        return pathname === path;
+    };
 
     // ✅ FIXED: Inventory parent active for BOTH inventory + purchase-order
     const inventoryActive =
@@ -55,10 +66,12 @@ export default function Header() {
 
     const isDashboard = pathname === "/dashboard" || pathname === "/";
 
+    const isOrderDetails = pathname.includes("/orderdetails");
+
     return (
         <>
             <Navbar className="px-4 py-3 mt-3">
-                <Container fluid className="p-0 align-items-start">
+                <div className="w-100 d-flex align-items-start">
 
                     {/* LEFT TITLE */}
                     <div>
@@ -71,28 +84,56 @@ export default function Header() {
                             />
                         </div>
 
-                        <h4 className="mb-1 fw-bold">
-                            {pageTitle}
-                        </h4>
+                        <div className="d-flex align-items-center">
+
+                            {isOrderDetails && (
+                                <Button
+                                    variant="transparent"
+                                    className="mb-2"
+                                    onClick={() => router.back()}
+                                >
+                                    <ArrowLeft className="text-muted " size={25} />
+                                </Button>
+                            )}
+
+                            <h4 className="mb-1 fw-bold">
+                                {pageTitle}
+                            </h4>
+
+                        </div>
 
                         {isDashboard ? (
                             <p className="text-muted mb-0">
                                 Hello Admin
                             </p>
                         ) : (
-                            <div className="small">
+                            <div className={`small d-flex align-items-center flex-wrap ${isOrderDetails ? "ms-3" : ""
+                                }`}>
                                 <span className="text-primary fw-semibold">
                                     Dashboard
                                 </span>
 
-                                {pathParts.map((part, index) => (
-                                    <span key={index}>
-                                        <span className="text-muted"> / </span>
-                                        <span className="text-muted">
-                                            {formatName(part)}
+                                {pathParts.map((part, index) => {
+                                    const isOrders =
+                                        part === "orders" &&
+                                        pathname.includes("/orderdetails");
+
+                                    return (
+                                        <span key={index}>
+                                            <span className="text-muted"> / </span>
+
+                                            <span
+                                                className={
+                                                    isOrders
+                                                        ? "text-primary fw-semibold"
+                                                        : "text-muted"
+                                                }
+                                            >
+                                                {formatName(part)}
+                                            </span>
                                         </span>
-                                    </span>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -151,7 +192,7 @@ export default function Header() {
                         </Button>
                     </div>
 
-                </Container>
+                </div>
             </Navbar>
 
             {/* MOBILE OFFCANVAS */}
@@ -170,11 +211,10 @@ export default function Header() {
                         {/* Dashboard */}
                         <Link
                             href="/dashboard"
-                            className={`nav-link d-flex align-items-center ${
-                                isActive("/dashboard")
-                                    ? "text-primary fw-semibold"
-                                    : "text-secondary"
-                            }`}
+                            className={`nav-link d-flex align-items-center ${isActive("/dashboard")
+                                ? "text-primary fw-semibold"
+                                : "text-secondary"
+                                }`}
                             onClick={() => setShow(false)}
                         >
                             <Grid className="me-2" />
@@ -184,11 +224,10 @@ export default function Header() {
                         {/* Orders */}
                         <Link
                             href="/orders"
-                            className={`nav-link d-flex align-items-center ${
-                                isActive("/orders")
-                                    ? "text-primary fw-semibold"
-                                    : "text-secondary"
-                            }`}
+                            className={`nav-link d-flex align-items-center ${isActive("/orders")
+                                ? "text-primary fw-semibold"
+                                : "text-secondary"
+                                }`}
                             onClick={() => setShow(false)}
                         >
                             <Bag className="me-2" />
@@ -198,11 +237,10 @@ export default function Header() {
                         {/* Messages */}
                         <Link
                             href="/messages"
-                            className={`nav-link d-flex align-items-center ${
-                                isActive("/messages")
-                                    ? "text-primary fw-semibold"
-                                    : "text-secondary"
-                            }`}
+                            className={`nav-link d-flex align-items-center ${isActive("/messages")
+                                ? "text-primary fw-semibold"
+                                : "text-secondary"
+                                }`}
                             onClick={() => setShow(false)}
                         >
                             <ChatDots className="me-2" />
@@ -212,11 +250,10 @@ export default function Header() {
                         {/* Calendar */}
                         <Link
                             href="/calendar"
-                            className={`nav-link d-flex align-items-center ${
-                                isActive("/calendar")
-                                    ? "text-primary fw-semibold"
-                                    : "text-secondary"
-                            }`}
+                            className={`nav-link d-flex align-items-center ${isActive("/calendar")
+                                ? "text-primary fw-semibold"
+                                : "text-secondary"
+                                }`}
                             onClick={() => setShow(false)}
                         >
                             <Calendar3 className="me-2" />
@@ -226,11 +263,10 @@ export default function Header() {
                         {/* Menu */}
                         <Link
                             href="/menu"
-                            className={`nav-link d-flex align-items-center ${
-                                isActive("/menu")
-                                    ? "text-primary fw-semibold"
-                                    : "text-secondary"
-                            }`}
+                            className={`nav-link d-flex align-items-center ${isActive("/menu")
+                                ? "text-primary fw-semibold"
+                                : "text-secondary"
+                                }`}
                             onClick={() => setShow(false)}
                         >
                             <Grid className="me-2" />
@@ -242,11 +278,10 @@ export default function Header() {
 
                             <Dropdown.Toggle
                                 variant="light"
-                                className={`w-100 text-start d-flex align-items-center ${
-                                    inventoryActive
-                                        ? "text-primary fw-semibold"
-                                        : "text-secondary"
-                                }`}
+                                className={`w-100 text-start d-flex align-items-center ${inventoryActive
+                                    ? "text-primary fw-semibold"
+                                    : "text-secondary"
+                                    }`}
                             >
                                 <BoxSeam className="me-2" />
                                 Inventory
@@ -284,11 +319,10 @@ export default function Header() {
                         {/* Reviews */}
                         <Link
                             href="/reviews"
-                            className={`nav-link d-flex align-items-center ${
-                                isActive("/reviews")
-                                    ? "text-primary fw-semibold"
-                                    : "text-secondary"
-                            }`}
+                            className={`nav-link d-flex align-items-center ${isActive("/reviews")
+                                ? "text-primary fw-semibold"
+                                : "text-secondary"
+                                }`}
                             onClick={() => setShow(false)}
                         >
                             <StarFill className="me-2" />
