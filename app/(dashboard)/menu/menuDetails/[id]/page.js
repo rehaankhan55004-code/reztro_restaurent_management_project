@@ -1,9 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Card, Button, Row, Col, Container } from "react-bootstrap";
+import { Card, Button, Row, Col, Container, Form } from "react-bootstrap";
 import {
-  menuDetails,
   similarMenus,
   reviews,
   orderChart,
@@ -11,10 +10,24 @@ import {
 import "@/styles/menu/menu-Details/menuDetail.scss";
 import { Basket, Bookmark, ChatLeftText, PencilSquare, Share, StarFill } from "react-bootstrap-icons";
 import { BsThreeDots } from "react-icons/bs";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { getMenuById } from "@/utils/MenuStorage";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function MenuDetailsPage() {
+  const [orderFilter, setOrderFilter] = useState("This Week");
+  const { id } = useParams();
+  const [menuDetails, setMenuDetails] = useState(null);
+
+  useEffect(() => {
+    setMenuDetails(getMenuById(id));
+  }, [id]);
+
+  if (!menuDetails) return <p>Menu not found</p>;
+
   const orderChartOptions = {
     chart: {
       type: "bar",
@@ -23,7 +36,7 @@ export default function MenuDetailsPage() {
     },
     plotOptions: {
       bar: {
-        columnWidth: "55%",
+        columnWidth: "42%",
         borderRadius: 9,
         colors: {
           backgroundBarColors: ["#FDE8D7"],
@@ -35,11 +48,11 @@ export default function MenuDetailsPage() {
     colors: ["#FF6422"],
     dataLabels: {
       enabled: true,
-      offsetY: -16,
+      offsetY: 10,
       style: {
         fontSize: "10px",
         fontWeight: 400,
-        colors: ["#8f8f8f"],
+        colors: ["#fff"],
       },
       formatter: (value) => value,
     },
@@ -98,34 +111,56 @@ export default function MenuDetailsPage() {
         <Col xs={12} xl={7} xxl={8}>
           <Card className="details-card border-0">
             <Card.Body>
-              <Card.Img
-                className="menu-image"
-                src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=800"
-                alt={menuDetails.title}
-              />
+              {menuDetails.image ? (
+                <Card.Img
+                  src={menuDetails.image}
+                  alt={menuDetails.name}
+                  className="menu-image img-fluid"
+                />
+              ) : (
+                <div className="menu-image-placeholder" />
+              )}
 
               <Row className="align-items-start justify-content-between mt-2 g-3">
                 <Col xs={12} md="auto">
-                  <h2>{menuDetails.title}</h2>
+                  <h2>{menuDetails.name}</h2>
 
                   <div className="category">
-                    {menuDetails.categoryText}
-                    <span>{menuDetails.tag}</span>
+                    {menuDetails.category}
+
+                    <div className="tag-list">
+                      {(Array.isArray(menuDetails.tags)
+                        ? menuDetails.tags
+                        : [menuDetails.tags]
+                      )
+                        .filter(Boolean)
+                        .map((tag) => (
+                          <span key={tag}>{tag}</span>
+                        ))}
+                    </div>
                   </div>
                 </Col>
 
                 <Col xs={12} md="auto">
                   <div className="price-actions justify-content-between">
-                    <p>${menuDetails.price.toFixed(2)}</p>
+                    <p>${Number(menuDetails.price || 0).toFixed(2)}</p>
 
-                    <div>
-                      <button type="button" aria-label="share" className="me-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <Button
+                        type="button"
+                        className="price-icon-btn"
+                        aria-label="share"
+                      >
                         <Share />
-                      </button>
+                      </Button>
 
-                      <button type="button" aria-label="bookmark">
+                      <Button
+                        type="button"
+                        className="price-icon-btn"
+                        aria-label="bookmark"
+                      >
                         <Bookmark />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </Col>
@@ -160,13 +195,13 @@ export default function MenuDetailsPage() {
 
                   <p className="fs-12 fw-semibold mb-1">Values</p>
                   <div className="values d-flex flex-wrap">
-                    {menuDetails.values.map((item) => (
+                    {(menuDetails.values || []).map((item) => (
                       <span key={item}>{item}</span>
                     ))}
                   </div>
 
                   <Row className="nutrition g-0">
-                    {menuDetails.nutrition.map((item) => (
+                    {(menuDetails.nutrition || []).map((item) => (
                       <Col xs={6} sm={3} key={item.label}>
                         <small>{item.label}</small>
                         <p>
@@ -188,22 +223,23 @@ export default function MenuDetailsPage() {
                       </div>
 
                       <ul>
-                        {menuDetails.ingredients.map((item) => (
+                        {(menuDetails.ingredients || []).map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
                     </Card.Body>
                   </Card>
 
-                  <Button className="edit-btn w-100 d-flex justify-content-center align-items-center gap-2">
+                  <Link
+                    href={`/menu/edit/${menuDetails.id}`}
+                    className="edit-btn w-100 d-flex justify-content-center align-items-center gap-2 text-decoration-none"
+                  >
                     <span className="edit-btn-icon">
                       <PencilSquare />
                     </span>
 
-                    <span className="edit-btn-text">
-                      Edit Menu
-                    </span>
-                  </Button>
+                    <span className="edit-btn-text">Edit Menu</span>
+                  </Link>
                 </Col>
               </Row>
             </Card.Body>
@@ -224,7 +260,7 @@ export default function MenuDetailsPage() {
                         <Card.Img
                           src={review.image}
                           alt={review.name}
-                          className="avatar"
+                          className="avatar img-fluid"
                         />
                       ) : (
                         <div className="avatar-placeholder" />
@@ -251,9 +287,18 @@ export default function MenuDetailsPage() {
         <Col xs={12} xl={5} xxl={4}>
           <Card className="overview-card border-0">
             <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex justify-content-between align-items-center gap-3">
                 <h4>Orders Overview</h4>
-                <small>This Week</small>
+
+                <Form.Select
+                  className="chart-filter-select shadow-none"
+                  value={orderFilter}
+                  onChange={(e) => setOrderFilter(e.target.value)}
+                >
+                  <option value="This Week">This Week</option>
+                  <option value="This Month">This Month</option>
+                  <option value="This Year">This Year</option>
+                </Form.Select>
               </div>
 
               <div className="orders-chart">
@@ -281,7 +326,7 @@ export default function MenuDetailsPage() {
                       variant="top"
                       src={item.image}
                       alt={item.name}
-                      className="similar-img"
+                      className="similar-img img-fluid"
                     />
                   ) : (
                     <div className="similar-img-placeholder" />

@@ -1,11 +1,11 @@
-import React from 'react'
+import InventoryOverview from "@/components/inventory/InventoryOverview";
+import InventoryTable from "@/components/inventory/InventoryTable";
 
-const page = () => {
+export default function InventoryPage() {
   return (
-    <div>
-        inventory
+    <div className="inventory-page">
+      <InventoryOverview />
+      <InventoryTable />
     </div>
-  )
+  );
 }
-
-export default page

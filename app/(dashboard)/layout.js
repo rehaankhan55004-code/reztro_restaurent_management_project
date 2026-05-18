@@ -3,6 +3,7 @@
 import Footer from "@/components/footer";
 import Header from "@/components/header";
 import Sidenav from "@/components/sidenav";
+import { ToastContainer } from "react-toastify";
 
 export default function Layout({ children }) {
 
@@ -19,6 +20,13 @@ export default function Layout({ children }) {
 
         <main className="flex-grow-1 d-flex flex-column mx-4">
           {children}
+          <ToastContainer
+            position="top-right"
+            autoClose={1200}
+            hideProgressBar={false}
+            closeOnClick
+            pauseOnHover
+          />
         </main>
 
         <Footer />
