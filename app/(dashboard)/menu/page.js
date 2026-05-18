@@ -21,6 +21,7 @@ import MenuPagination from "@/components/menus/MenuPagination";
 import ShowingPagination from "@/components/menus/showingPagination";
 import RatingStars from "@/components/menus/RetingStars";
 import Link from "next/link";
+import { Plus } from "react-bootstrap-icons";
 
 const perPageOptions = [6, 9, 12];
 
@@ -204,8 +205,8 @@ export default function MenuPage() {
         <Col xs={12} md={8} xl={9}>
           <Card className="menu-content-card border-0 rounded-4 bg-white h-100 d-flex flex-column">
             <Card.Header className="bg-white border-0 p-3">
-              <Row className="g-3 align-items-center justify-content-between">
-                <Col xs={12} md={7}>
+              <Row className="g-3 align-items-center justify-content-between ">
+                <Col xs={12} xl={6}>
                   <div className="d-flex align-items-center gap-2">
                     <InputGroup className="search-box border p-1 rounded-4">
                       <InputGroup.Text className="bg-light border-0">
@@ -239,25 +240,30 @@ export default function MenuPage() {
                   </div>
                 </Col>
 
-                <Col xs={12} md={3}>
-                  <div className="sort-box d-flex align-items-center justify-content-md-end gap-2">
-                    <span className="sort-label text-muted text-nowrap">
-                      Sort by:
-                    </span>
+                <Col xs={12} xl={5}>
+                  <div className="d-flex align-items-center justify-content-between justify-content-xl-end gap-1 flex-wrap">
+                    <div className="d-flex align-items-center gap-1">
+                      <span className="sort-label text-nowrap">Sort by:</span>
 
-                    <Form.Select
-                      className="sort-select border-0 shadow-none bg-transparent"
-                      value={sortBy}
-                      onChange={(event) => {
-                        setSortBy(event.target.value);
-                        setCurrentPage(1);
-                      }}
-                    >
-                      <option value="Popular">Popular</option>
-                      <option value="Newest">Newest</option>
-                      <option value="Low Price">Low Price</option>
-                      <option value="High Price">High Price</option>
-                    </Form.Select>
+                      <Form.Select
+                        className="sort-select flex-shrink-0"
+                        value={sortBy}
+                        onChange={(event) => {
+                          setSortBy(event.target.value);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <option value="Popular">Popular</option>
+                        <option value="Newest">Newest</option>
+                        <option value="Low Price">Low Price</option>
+                        <option value="High Price">High Price</option>
+                      </Form.Select></div>
+                    <div>
+                      <Link href="/menu/add" className="add-menu-btn text-decoration-none flex-shrink-0">
+                        <Plus className="plus" />
+                        Add Menu
+                      </Link>
+                    </div>
                   </div>
                 </Col>
               </Row>
@@ -289,8 +295,8 @@ export default function MenuPage() {
               {paginatedMenu.length > 0 ? (
                 <Row className="g-4">
                   {paginatedMenu.map((item) => (
-                    <Col xs={6} md={6} xxl={4} key={item.id}>
-                      <Link href="/menu/menu-details" className="text-decoration-none">
+                    <Col xs={6} md={6} xl={4} xxl={4} key={item.id}>
+                      <Link href={`/menu/menuDetails/${item.id}`} className="text-decoration-none">
                         <Card className="menu-item-card border-0 h-100 d-flex flex-column">
                           <div className="menu-item-img-wrap">
                             {item.image ? (
