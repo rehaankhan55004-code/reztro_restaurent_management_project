@@ -7,7 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 
 import {
     Navbar,
-    Container,
     Form,
     FormControl,
     Button,
@@ -27,26 +26,39 @@ import {
     StarFill,
     Search,
     Gear,
-    ArrowBarLeft,
     ArrowLeft
 } from "react-bootstrap-icons";
 
 export default function Header() {
+
     const [show, setShow] = useState(false);
+
     const pathname = usePathname();
+
     const router = useRouter();
+
     const isActive = (path) => {
+
         if (path === "/orders") {
+
             return (
                 pathname === "/orders" ||
                 pathname.includes("/orderdetails")
             );
         }
 
+        /* MENU ACTIVE */
+        if (path === "/menu") {
+
+            return (
+                pathname === "/menu" ||
+                pathname.includes("/menu-details")
+            );
+        }
+
         return pathname === path;
     };
 
-    // ✅ FIXED: Inventory parent active for BOTH inventory + purchase-order
     const inventoryActive =
         pathname === "/inventory" ||
         pathname.startsWith("/inventory/") ||
@@ -64,17 +76,24 @@ export default function Header() {
             ? "Dashboard"
             : formatName(pathParts[pathParts.length - 1]);
 
-    const isDashboard = pathname === "/dashboard" || pathname === "/";
+    const isDashboard =
+        pathname === "/dashboard" ||
+        pathname === "/";
 
-    const isOrderDetails = pathname.includes("/orderdetails");
+    /* DETAILS PAGES */
+    const isDetailsPage =
+        pathname.includes("/orderdetails") ||
+        pathname.includes("/menu-details");
 
     return (
         <>
             <Navbar className="px-4 py-3 mt-3">
+
                 <div className="w-100 d-flex align-items-start">
 
                     {/* LEFT TITLE */}
                     <div>
+
                         <div className="d-md-none mb-2">
                             <Image
                                 src="/Symbol.svg"
@@ -86,13 +105,17 @@ export default function Header() {
 
                         <div className="d-flex align-items-center">
 
-                            {isOrderDetails && (
+                            {/* BACK BUTTON */}
+                            {isDetailsPage && (
                                 <Button
                                     variant="transparent"
                                     className="mb-2"
                                     onClick={() => router.back()}
                                 >
-                                    <ArrowLeft className="text-muted " size={25} />
+                                    <ArrowLeft
+                                        className="text-muted"
+                                        size={25}
+                                    />
                                 </Button>
                             )}
 
@@ -103,46 +126,66 @@ export default function Header() {
                         </div>
 
                         {isDashboard ? (
+
                             <p className="text-muted mb-0">
                                 Hello Admin
                             </p>
+
                         ) : (
-                            <div className={`small d-flex align-items-center flex-wrap ${isOrderDetails ? "ms-3" : ""
-                                }`}>
+
+                            <div
+                                className={`small d-flex align-items-center flex-wrap ${isDetailsPage ? "ms-3" : ""
+                                    }`}
+                            >
+
                                 <span className="text-primary fw-semibold">
                                     Dashboard
                                 </span>
 
                                 {pathParts.map((part, index) => {
+
                                     const isOrders =
                                         part === "orders" &&
                                         pathname.includes("/orderdetails");
 
+                                    /* MENU BREADCRUMB ACTIVE */
+                                    const isMenu =
+                                        part === "menu" &&
+                                        pathname.includes("/menu-details");
+
                                     return (
                                         <span key={index}>
-                                            <span className="text-muted"> / </span>
+
+                                            <span className="text-muted">
+                                                {" "} / {" "}
+                                            </span>
 
                                             <span
                                                 className={
-                                                    isOrders
+                                                    isOrders || isMenu
                                                         ? "text-primary fw-semibold"
                                                         : "text-muted"
                                                 }
                                             >
                                                 {formatName(part)}
                                             </span>
+
                                         </span>
                                     );
                                 })}
+
                             </div>
                         )}
+
                     </div>
 
                     {/* DESKTOP RIGHT */}
                     <div className="d-none d-md-flex align-items-center gap-3 ms-auto">
 
                         <Form className="d-flex">
+
                             <div className="position-relative w-100">
+
                                 <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
 
                                 <FormControl
@@ -150,7 +193,9 @@ export default function Header() {
                                     placeholder="Search"
                                     className="ps-5 border-0 rounded-3"
                                 />
+
                             </div>
+
                         </Form>
 
                         <Button variant="light">
@@ -162,13 +207,17 @@ export default function Header() {
                         </Button>
 
                         <div className="d-flex align-items-center gap-2 ms-2">
+
                             <div className="text-end lh-sm">
+
                                 <div className="fw-semibold">
                                     Amaan Solanki
                                 </div>
+
                                 <small className="text-muted">
                                     admin
                                 </small>
+
                             </div>
 
                             <Image
@@ -178,37 +227,43 @@ export default function Header() {
                                 height={38}
                                 className="rounded-circle"
                             />
+
                         </div>
 
                     </div>
 
                     {/* MOBILE BUTTON */}
                     <div className="d-md-none ms-auto">
+
                         <Button
                             variant="light"
                             onClick={() => setShow(true)}
                         >
                             <List size={28} />
                         </Button>
+
                     </div>
 
                 </div>
+
             </Navbar>
 
-            {/* MOBILE OFFCANVAS */}
             <Offcanvas
                 show={show}
                 onHide={() => setShow(false)}
                 placement="end"
             >
+
                 <Offcanvas.Header closeButton>
-                    <Offcanvas.Title>Menu</Offcanvas.Title>
+                    <Offcanvas.Title>
+                        Menu
+                    </Offcanvas.Title>
                 </Offcanvas.Header>
 
                 <Offcanvas.Body>
+
                     <Nav className="flex-column gap-3">
 
-                        {/* Dashboard */}
                         <Link
                             href="/dashboard"
                             className={`nav-link d-flex align-items-center ${isActive("/dashboard")
@@ -221,7 +276,6 @@ export default function Header() {
                             Dashboard
                         </Link>
 
-                        {/* Orders */}
                         <Link
                             href="/orders"
                             className={`nav-link d-flex align-items-center ${isActive("/orders")
@@ -234,7 +288,6 @@ export default function Header() {
                             Orders
                         </Link>
 
-                        {/* Messages */}
                         <Link
                             href="/messages"
                             className={`nav-link d-flex align-items-center ${isActive("/messages")
@@ -247,7 +300,6 @@ export default function Header() {
                             Messages
                         </Link>
 
-                        {/* Calendar */}
                         <Link
                             href="/calendar"
                             className={`nav-link d-flex align-items-center ${isActive("/calendar")
@@ -260,7 +312,6 @@ export default function Header() {
                             Calendar
                         </Link>
 
-                        {/* Menu */}
                         <Link
                             href="/menu"
                             className={`nav-link d-flex align-items-center ${isActive("/menu")
@@ -273,7 +324,6 @@ export default function Header() {
                             Menu
                         </Link>
 
-                        {/* INVENTORY */}
                         <Dropdown>
 
                             <Dropdown.Toggle
@@ -289,7 +339,6 @@ export default function Header() {
 
                             <Dropdown.Menu>
 
-                                {/* Inventory */}
                                 <Dropdown.Item
                                     href="/inventory"
                                     className={
@@ -301,7 +350,6 @@ export default function Header() {
                                     Inventory
                                 </Dropdown.Item>
 
-                                {/* Purchase Order */}
                                 <Dropdown.Item
                                     href="/purchase-order"
                                     className={
@@ -314,9 +362,9 @@ export default function Header() {
                                 </Dropdown.Item>
 
                             </Dropdown.Menu>
+
                         </Dropdown>
 
-                        {/* Reviews */}
                         <Link
                             href="/reviews"
                             className={`nav-link d-flex align-items-center ${isActive("/reviews")
@@ -330,7 +378,9 @@ export default function Header() {
                         </Link>
 
                     </Nav>
+
                 </Offcanvas.Body>
+
             </Offcanvas>
         </>
     );

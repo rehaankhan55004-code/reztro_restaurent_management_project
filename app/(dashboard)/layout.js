@@ -1,8 +1,11 @@
+"use client";
+
 import Footer from "@/components/footer";
 import Header from "@/components/header";
 import Sidenav from "@/components/sidenav";
 
 export default function Layout({ children }) {
+
   return (
     <div className="d-flex min-vh-100">
 
@@ -10,7 +13,7 @@ export default function Layout({ children }) {
         <Sidenav />
       </aside>
 
-       <div className="flex-grow-1 d-flex flex-column min-vh-100 bg-dashboard main-layout">
+      <div className="flex-grow-1 d-flex flex-column min-vh-100 bg-dashboard main-layout">
 
         <Header />
 
@@ -19,6 +22,7 @@ export default function Layout({ children }) {
         </main>
 
         <Footer />
+
       </div>
     </div>
   );

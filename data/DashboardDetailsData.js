@@ -181,7 +181,8 @@ export const recentOrders = [
 
   {
     id: "ORD1025",
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1579871494447-9811cf80d66c",
     menu: "Salmon Sushi Roll",
     category: "Seafood",
     quantity: 3,
@@ -192,7 +193,8 @@ export const recentOrders = [
 
   {
     id: "ORD1026",
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1612874742237-6526221588e3",
     menu: "Spaghetti Carbonara",
     category: "Pasta",
     quantity: 1,
@@ -203,7 +205,8 @@ export const recentOrders = [
 
   {
     id: "ORD1027",
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
     menu: "Classic Cheeseburger",
     category: "Burger",
     quantity: 1,
@@ -220,7 +223,8 @@ export const trendingMenus = [
     id: 1,
     title: "Grilled Chicken Delight",
     category: "Chicken",
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1600891964092-4316c288032e",
     rating: 4.9,
     orders: 350,
     price: 18.00,
@@ -230,7 +234,8 @@ export const trendingMenus = [
     id: 2,
     title: "Sunny Citrus Cake",
     category: "Dessert",
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1578985545062-69928b1d9587",
     rating: 4.8,
     orders: 400,
     price: 8.50,
@@ -240,7 +245,8 @@ export const trendingMenus = [
     id: 3,
     title: "Fiery Shrimp Salad",
     category: "Seafood",
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe",
     rating: 4.7,
     orders: 270,
     price: 12.00,
@@ -258,7 +264,8 @@ export const customerReviews = [
     customer: "Sarah M.",
     date: "Oct 12, 2035",
     rating: 5,
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9",
   },
 
   {
@@ -269,7 +276,8 @@ export const customerReviews = [
     customer: "Michael R.",
     date: "Oct 15, 2035",
     rating: 4.5,
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1513104890138-7c749659a591",
   },
 
   {
@@ -280,9 +288,9 @@ export const customerReviews = [
     customer: "Jessica L.",
     date: "Oct 18, 2035",
     rating: 4.8,
-    image: "",
+    image:
+      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
   },
-
 ];
 
 export const recentActivities = [

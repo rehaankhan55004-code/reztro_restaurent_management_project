@@ -1,11 +1,12 @@
-import React from 'react'
+"use client";
 
-const layout = () => {
+const Layout = ({ children }) => {
+
   return (
     <div>
-      
+      {children}
     </div>
-  )
-}
+  );
+};
 
-export default layout
+export default Layout;
