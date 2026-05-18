@@ -20,10 +20,13 @@ import {
 
 } from "react-bootstrap-icons";
 import { Star } from "lucide-react";
+import { logout } from "@/helper/auth";
 
 
 
 export default function Sidenav() {
+
+  const router = useRouter();
   return (
     <>
       {/* Desktop Sidebar */}
@@ -39,23 +42,39 @@ export default function Sidenav() {
             <SidebarMenu />
           </div>
 
-          <div className="mt-auto p-3 rounded-4 bg-success d-flex flex-column align-items-center">
-            <p className="small mb-3 mt-5">
-              Streamline restaurant <br />
-              management with real- <br />
-              time insights.
-            </p>
+          <div className="mt-auto d-flex flex-column gap-3">
 
-            <button className="btn btn-primary text-white rounded-3 w-100">
-              Upgrade Now
-            </button>
+            <div className="p-3 rounded-4 bg-success d-flex flex-column align-items-center">
+              <p className="small mb-3 mt-5">
+                Streamline restaurant <br />
+                management with real- <br />
+                time insights.
+              </p>
+
+              <button className="btn btn-primary text-white rounded-3 w-100">
+                Upgrade Now
+              </button>
+            </div>
+
+            {/* LOGOUT */}
+            <Button
+              type="button"
+              onClick={() => {
+                logout();
+                router.replace("/signin");
+              }}
+              className="w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 border-0 bg-primary text-white fw-semibold py-2"
+            >
+              <BoxArrowRight size={18} />
+              Logout
+            </Button>
+
           </div>
 
         </div>
       </div>
 
 
-      {/* Tablet Icon Sidebar */}
       {/* Tablet Icon Sidebar */}
       <div className="d-none d-md-flex d-lg-none p-3 flex-column h-100 align-items-center border-end">
 
@@ -78,14 +97,20 @@ export default function Sidenav() {
           </div>
 
           {/* Bottom button */}
-          <div className="mt-auto">
+          <div className="mt-auto pt-3 border-top w-100 d-flex justify-content-center">
+
             <Button
               type="button"
-              className="btn border-0 bg-transparent text-secondary d-flex justify-content-center align-items-center rounded-3 p-2"
+              onClick={() => {
+                logout();
+                router.replace("/signin");
+              }}
+              className="border-0 bg-light text-secondary d-flex align-items-center justify-content-center rounded-3 p-2"
               style={{ width: "42px", height: "42px" }}
             >
-              <BoxArrowRight size={20} />
+              <BoxArrowRight size={18} />
             </Button>
+
           </div>
 
         </div>
@@ -219,7 +244,8 @@ function SidebarMenu({ iconsOnly = false }) {
       {iconsOnly ? (
         <Link
           href="/menu"
-          className={`nav-link sidebar-link border-0 d-flex justify-content-center align-items-center rounded-3 p-2 fw-semibold ${pathname === "/menu"
+          className={`nav-link sidebar-link border-0 d-flex justify-content-center align-items-center rounded-3 p-2 fw-semibold ${pathname === "/menu" ||
+            pathname.includes("/menu-details")
             ? "text-white bg-primary"
             : "text-secondary"
             }`}
@@ -230,7 +256,8 @@ function SidebarMenu({ iconsOnly = false }) {
       ) : (
         <Link
           href="/menu"
-          className={`nav-link sidebar-link fw-semibold ${pathname === "/menu"
+          className={`nav-link sidebar-link fw-semibold ${pathname === "/menu" ||
+            pathname.includes("/menu-details")
             ? "active-sidebar"
             : "text-secondary"
             }`}
@@ -313,7 +340,7 @@ function SidebarMenu({ iconsOnly = false }) {
             }`}
           style={{ width: "42px", height: "42px" }}
         >
-          <Star size={20} />
+          <Star size={17} />
         </Link>
       ) : (
         <Link
@@ -323,7 +350,7 @@ function SidebarMenu({ iconsOnly = false }) {
             : "text-secondary"
             }`}
         >
-          <Star className="me-2" size={20} />
+          <Star className="me-2 mb-1" size={17} />
           {!iconsOnly && " Reviews"}
         </Link>
       )}
