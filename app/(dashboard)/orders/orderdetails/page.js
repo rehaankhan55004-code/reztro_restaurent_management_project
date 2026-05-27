@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
     Card,
@@ -20,7 +21,7 @@ import {
 import { orderCards } from "@/data";
 import { Check, GeoAlt } from "react-bootstrap-icons";
 
-export default function OrderDetailsPage() {
+function OrderDetailsContent() {
 
     const statusConfig = {
         Completed: {
@@ -437,5 +438,13 @@ export default function OrderDetailsPage() {
             </Container>
 
         </div>
+    );
+}
+
+export default function OrderDetailsPage() {
+    return (
+        <Suspense fallback={<div>Loading order details...</div>}>
+            <OrderDetailsContent />
+        </Suspense>
     );
 }
