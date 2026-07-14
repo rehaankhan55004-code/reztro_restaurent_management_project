@@ -17,6 +17,8 @@ export function proxy(request) {
     "/inventory",
     "/purchase-order",
     "/reviews",
+    "/drivers",
+    "/customers",
   ];
 
   const isProtectedRoute =
@@ -35,6 +37,9 @@ export function proxy(request) {
   const authRoutes = [
     "/signin",
     "/signup",
+    "/forget-password",
+    "/reset-password",
+    "/verify-email",
   ];
 
   const isAuthRoute =
@@ -60,7 +65,12 @@ export const config = {
     "/inventory/:path*",
     "/purchase-order/:path*",
     "/reviews/:path*",
+    "/drivers/:path*",
+    "/customers/:path*",
     "/signin",
     "/signup",
+    "/forget-password",
+    "/reset-password/:path*",
+    "/verify-email/:path*",
   ],
 };

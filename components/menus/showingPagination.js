@@ -31,8 +31,5 @@ export default function showingPagination({
     </div>
 
         </>
-
-
-
   );
 }
