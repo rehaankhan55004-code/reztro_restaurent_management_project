@@ -10,7 +10,6 @@ export default function FilterGroup({
   inactiveVariant = "info",
   className = "rounded-3 overflow-hidden shadow-sm",
 
-  // 🔥 NEW (optional, does NOT affect existing usage)
   mode = "table",
 }) {
   return (
@@ -26,7 +25,7 @@ export default function FilterGroup({
             className={`px-3 border-0 ${
               isActive ? "text-white" : "text-secondary"
             } ${
-              // 🔥 ONLY affects card mode
+              
               mode === "card" && !isActive ? "bg-white text-dark" : ""
             }`}
             onClick={() => onChange(option)}

@@ -15,15 +15,30 @@ import {
 import { FaSearch } from "react-icons/fa";
 import { BiFilterAlt } from "react-icons/bi";
 
-import { menuFilters, menuItems } from "@/data/MenuListData";
 import MenuFilter from "@/components/menus/MenuFilters";
 import MenuPagination from "@/components/menus/MenuPagination";
 import ShowingPagination from "@/components/menus/showingPagination";
 import RatingStars from "@/components/menus/RetingStars";
 import Link from "next/link";
 import { Plus } from "react-bootstrap-icons";
+import { menuService } from "@/services/menuService";
 
 const perPageOptions = [6, 9, 12];
+
+const priceRanges = [
+  { id: 1, label: "$0 - $10", min: 0, max: 10 },
+  { id: 2, label: "$11 - $20", min: 11, max: 20 },
+  { id: 3, label: "$21 - $30", min: 21, max: 30 },
+  { id: 4, label: "$31+", min: 31, max: null },
+];
+
+const ratings = [
+  { id: 5, label: "5 Star", value: 5 },
+  { id: 4, label: "4 Star", value: 4 },
+  { id: 3, label: "3 Star", value: 3 },
+  { id: 2, label: "2 Star", value: 2 },
+  { id: 1, label: "1 Star", value: 1 },
+];
 
 export default function MenuPage() {
   const [searchText, setSearchText] = useState("");
@@ -36,26 +51,106 @@ export default function MenuPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
   const [showFilter, setShowFilter] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
 
+  const [dbPromotions, setDbPromotions] = useState([]);
+  const [dbMealTimes, setDbMealTimes] = useState([]);
 
   useEffect(() => {
     const handleResponsiveItems = () => {
       const width = window.innerWidth;
-
       if (width < 1200) {
         setItemsPerPage(8);
       } else {
         setItemsPerPage(9);
       }
-
-      setCurrentPage(1);
     };
 
     handleResponsiveItems();
-
     window.addEventListener("resize", handleResponsiveItems);
-
     return () => window.removeEventListener("resize", handleResponsiveItems);
+  }, []);
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        setMenuLoading(true);
+        const response = await menuService.getMenuItems();
+        const data =
+          response?.data?.data ||
+          response?.data?.menu_items ||
+          response?.data ||
+          response?.menu_items ||
+          response ||
+          [];
+
+        const formattedData = Array.isArray(data)
+          ? data.map((item) => ({
+            id: item.menu_id || item.id,
+            name: item.name || "",
+            category: item.category_name || item.category || "",
+
+            mealTime:
+              item.meal_times?.map((m) => m.meal_time_name).join(", ") ||
+              item.meal_time_name ||
+              "",
+
+            price: Number(item.price || 0),
+            rating: Number(item.rating || 0),
+            image: item.image_url || "",
+
+            tags: item.tags?.map((t) => t.tag_name) || [],
+
+            promotions:
+              item.promotions?.map((p) => p.promotion_title) || [],
+          }))
+          : [];
+
+        setMenuItems(formattedData);
+      } catch (error) {
+        console.log(error.message || "Failed to fetch menu items");
+      } finally {
+        setMenuLoading(false);
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const response = await menuService.getMenuCategories();
+        const data = response?.data?.data || response?.data || [];
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.log(error.message || "Failed to fetch menu categories");
+        setCategories([]);
+      }
+    };
+
+    const fetchMealTimes = async () => {
+      try {
+        const response = await menuService.getMealTimes();
+        const data = response?.data?.data || response?.data || [];
+        setDbMealTimes(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.log("Failed to fetch meal times", error);
+      }
+    };
+
+    const fetchPromotions = async () => {
+      try {
+        const response = await menuService.getPromotions();
+        const data = response?.data || response?.data?.data || [];
+        setDbPromotions(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.log("Failed to fetch promotions", error);
+      }
+    };
+
+    fetchMenuItems();
+    fetchCategories();
+    fetchMealTimes();
+    fetchPromotions();
   }, []);
 
   const resetFilters = () => {
@@ -86,14 +181,64 @@ export default function MenuPage() {
       ];
 
     if (hasAll && updatedValues.length === 0) {
-      setSelectedValues(
-        selectedValues.includes("All Promo") ? ["All Promo"] : ["All"]
-      );
+      setSelectedValues(value === "All Promo" ? ["All Promo"] : ["All"]);
       return;
     }
 
     setSelectedValues(updatedValues);
   };
+
+  const dynamicMenuFilters = useMemo(() => {
+    const activeCategories = categories
+      .filter((cat) => cat.is_active === true)
+      .map((cat) => cat.category_name || cat.name || "");
+
+    const categoryList = [...new Set(activeCategories)].filter(Boolean).map((item, index) => ({
+      id: index + 1,
+      name: item,
+      label: item,
+      value: item,
+    }));
+
+    const activeMealTimes = dbMealTimes
+      .filter((m) => m.is_active !== false)
+      .map((m) => m.meal_time_name || m.name || "");
+
+    const mealTimeList = [...new Set(activeMealTimes)].filter(Boolean).map((item, index) => ({
+      id: index + 1,
+      name: item,
+      label: item,
+      value: item,
+    }));
+
+    const activePromos = dbPromotions
+      .filter((p) => p.is_active !== false)
+      .map((p) => p.promotion_title || p.promotion_code || "");
+
+    const promoList = [...new Set(activePromos)].filter(Boolean).map((item, index) => ({
+      id: index + 1,
+      name: item,
+      label: item,
+      value: item,
+    }));
+
+    return {
+      categories: [
+        { id: 0, name: "All", label: "All", value: "All" },
+        ...categoryList,
+      ],
+      mealTimes: [
+        { id: 0, name: "All", label: "All", value: "All" },
+        ...mealTimeList,
+      ],
+      priceRanges,
+      ratings,
+      promos: [
+        { id: 0, name: "All Promo", label: "All Promo", value: "All Promo" },
+        ...promoList,
+      ],
+    };
+  }, [categories, dbMealTimes, dbPromotions]);
 
   const filteredMenu = useMemo(() => {
     let result = [...menuItems];
@@ -102,26 +247,28 @@ export default function MenuPage() {
       const keyword = searchText.toLowerCase().trim();
       result = result.filter(
         (item) =>
-          item.name.toLowerCase().includes(keyword) ||
-          item.category.toLowerCase().includes(keyword) ||
-          item.mealTime.toLowerCase().includes(keyword)
+          item.name?.toLowerCase().includes(keyword) ||
+          item.category?.toLowerCase().includes(keyword) ||
+          item.mealTime?.toLowerCase().includes(keyword)
       );
     }
 
     if (!selectedCategories.includes("All")) {
-      result = result.filter((item) => selectedCategories.includes(item.category));
+      result = result.filter((item) =>
+        selectedCategories.includes(item.category)
+      );
     }
 
     if (!selectedMealTimes.includes("All")) {
-      result = result.filter((item) => selectedMealTimes.includes(item.mealTime));
+      result = result.filter((item) =>
+        selectedMealTimes.includes(item.mealTime)
+      );
     }
 
     if (selectedPrices.length > 0) {
       result = result.filter((item) =>
         selectedPrices.some((label) => {
-          const range = menuFilters.priceRanges.find(
-            (price) => price.label === label
-          );
+          const range = priceRanges.find((price) => price.label === label);
           if (!range) return false;
           if (range.max === null) return item.price > range.min;
           return item.price >= range.min && item.price <= range.max;
@@ -141,7 +288,7 @@ export default function MenuPage() {
 
     if (selectedPromos.length > 0 && !selectedPromos.includes("All Promo")) {
       result = result.filter((item) =>
-        selectedPromos.some((promo) => item.tags.includes(promo))
+        selectedPromos.some((promo) => item.promos?.includes(promo))
       );
     }
 
@@ -152,6 +299,7 @@ export default function MenuPage() {
 
     return result;
   }, [
+    menuItems,
     searchText,
     selectedCategories,
     selectedMealTimes,
@@ -161,7 +309,13 @@ export default function MenuPage() {
     sortBy,
   ]);
 
-  const totalPages = Math.ceil(filteredMenu.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredMenu.length / itemsPerPage));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
 
   const paginatedMenu = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -170,7 +324,7 @@ export default function MenuPage() {
 
   const filterContent = (
     <MenuFilter
-      menuFilters={menuFilters}
+      menuFilters={dynamicMenuFilters}
       selectedCategories={selectedCategories}
       selectedMealTimes={selectedMealTimes}
       selectedPrices={selectedPrices}
@@ -212,7 +366,6 @@ export default function MenuPage() {
                       <InputGroup.Text className="bg-light border-0">
                         <FaSearch size={12} />
                       </InputGroup.Text>
-
                       <Form.Control
                         className="bg-light shadow-none border-0"
                         placeholder="Search for menu"
@@ -222,12 +375,10 @@ export default function MenuPage() {
                           setCurrentPage(1);
                         }}
                       />
-
                       <Button variant="primary" className="rounded-4 text-white">
                         Search
                       </Button>
                     </InputGroup>
-
                     <Button
                       type="button"
                       variant="light"
@@ -244,7 +395,6 @@ export default function MenuPage() {
                   <div className="d-flex align-items-center justify-content-between justify-content-xl-end gap-1 flex-wrap">
                     <div className="d-flex align-items-center gap-1">
                       <span className="sort-label text-nowrap">Sort by:</span>
-
                       <Form.Select
                         className="sort-select flex-shrink-0"
                         value={sortBy}
@@ -257,11 +407,11 @@ export default function MenuPage() {
                         <option value="Newest">Newest</option>
                         <option value="Low Price">Low Price</option>
                         <option value="High Price">High Price</option>
-                      </Form.Select></div>
+                      </Form.Select>
+                    </div>
                     <div>
                       <Link href="/menu/add" className="add-menu-btn text-decoration-none flex-shrink-0">
-                        <Plus className="plus" />
-                        Add Menu
+                       Add Menu
                       </Link>
                     </div>
                   </div>
@@ -271,11 +421,7 @@ export default function MenuPage() {
 
             {showFilter && (
               <div className="mobile-filter-popup d-md-none">
-                <div
-                  className="mobile-filter-backdrop"
-                  onClick={() => setShowFilter(false)}
-                />
-
+                <div className="mobile-filter-backdrop" onClick={() => setShowFilter(false)} />
                 <div className="mobile-filter-content">
                   <button
                     type="button"
@@ -285,90 +431,82 @@ export default function MenuPage() {
                   >
                     ×
                   </button>
-
                   {filterContent}
                 </div>
               </div>
             )}
 
             <Card.Body className="p-3 flex-grow-1">
-              {paginatedMenu.length > 0 ? (
+              {menuLoading ? (
+                <Card className="border-0 rounded-4 bg-white h-100">
+                  <Card.Body className="min-empty d-flex flex-column align-items-center justify-content-center text-center">
+                    <h5>Loading menu items...</h5>
+                  </Card.Body>
+                </Card>
+              ) : paginatedMenu.length > 0 ? (
                 <Row className="g-4">
-                  {paginatedMenu.map((item) => (
-                    <Col xs={6} md={6} xl={4} xxl={4} key={item.id}>
-                      <Link href={`/menu/menuDetails/${item.id}`} className="text-decoration-none">
-                        <Card className="menu-item-card border-0 h-100 d-flex flex-column">
-                          <div className="menu-item-img-wrap">
-                            {item.image ? (
-                              <Card.Img
-                                variant="top"
-                                src={item.image}
-                                alt={item.name}
-                                className="menu-item-img"
-                              />
-                            ) : (
-                              <div className="menu-item-img-placeholder" />
-                            )}
+                  {paginatedMenu.map((item) => {
+                    return (
+                      <Col xs={6} md={6} xl={4} xxl={4} key={item.id}>
+                        <Link href={`/menu/menuDetails?id=${item.id}`} className="text-decoration-none" prefetch={false}>
+                          <Card className="menu-item-card border-0 h-100 d-flex flex-column">
+                            <div className="menu-item-img-wrap">
+                              {item.image ? (
+                                <Card.Img variant="top" src={item.image} alt={item.name} className="menu-item-img" />
+                              ) : (
+                                <div className="menu-item-img-placeholder" />
+                              )}
+                              {/* Tags */}
+                              {item.tags?.map((tag, index) => (
+                                <Badge
+                                  key={`tag-${index}`}
+                                  bg="primary"
+                                  className="menu-item-badge me-1"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
 
-                            {item.tags.length > 0 && (
-                              <div className="menu-item-tags">
-                                {item.tags.map((tag) => (
-                                  <Badge
-                                    key={tag}
-                                    bg="light"
-                                    text="primary"
-                                    className="menu-item-badge"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <Card.Body className="menu-item-body d-flex flex-column justify-content-evenly flex-grow-1">
-                            <div>
-                              <Card.Title className="menu-item-title">
-                                {item.name}
-                              </Card.Title>
-
-                              <Card.Text className="menu-item-category">
-                                {item.category}
-                              </Card.Text>
+                              {/* Promotions */}
+                              {item.promotions?.map((promotion, index) => (
+                                <Badge
+                                  key={`promotion-${index}`}
+                                  bg="danger"
+                                  className="menu-item-badge me-1"
+                                >
+                                  {promotion}
+                                </Badge>
+                              ))}
                             </div>
-
-                            <div className="menu-item-footer d-flex align-items-center justify-content-between">
-                              <div className="d-flex align-items-center">
-                                <span className="rating-desktop">
-                                  <RatingStars rating={item.rating} />
-                                </span>
-
-                                <span className="rating-mobile">
-                                  <RatingStars rating={1} showEmpty={false} size={12} />
-                                </span>
-
-                                <span className="menu-item-rating-value ms-1">
-                                  {item.rating}
-                                </span>
+                            <Card.Body className="menu-item-body d-flex flex-column justify-content-evenly flex-grow-1">
+                              <div>
+                                <Card.Title className="menu-item-title">{item.name}</Card.Title>
+                                <Card.Text className="menu-item-category">{item.category}</Card.Text>
                               </div>
-
-                              <strong className="menu-item-price">
-                                ${item.price.toFixed(2)}
-                              </strong>
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Link>
-                    </Col>
-                  ))}
+                              <div className="menu-item-footer d-flex align-items-center justify-content-between">
+                                <div className="d-flex align-items-center">
+                                  <span className="rating-desktop">
+                                    <RatingStars rating={item.rating} />
+                                  </span>
+                                  <span className="rating-mobile">
+                                    <RatingStars rating={1} showEmpty={false} size={12} />
+                                  </span>
+                                  <span className="menu-item-rating-value ms-1">{item.rating}</span>
+                                </div>
+                                <strong className="menu-item-price">${Number(item.price || 0).toFixed(2)}</strong>
+                              </div>
+                            </Card.Body>
+                          </Card>
+                        </Link>
+                      </Col>
+                    );
+                  })}
                 </Row>
               ) : (
                 <Card className="border-0 rounded-4 bg-white h-100">
                   <Card.Body className="min-empty d-flex flex-column align-items-center justify-content-center text-center">
                     <h5>No menu item found</h5>
-                    <p className="text-muted mb-0">
-                      Try changing the filters or search keywords.
-                    </p>
+                    <p className="text-muted mb-0">Try changing the filters or search keywords.</p>
                   </Card.Body>
                 </Card>
               )}
@@ -387,11 +525,14 @@ export default function MenuPage() {
                     }}
                   />
                 </div>
-
                 <MenuPagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={(page) => {
+                    if (page >= 1 && page <= totalPages) {
+                      setCurrentPage(page);
+                    }
+                  }}
                 />
               </div>
             </Card.Footer>

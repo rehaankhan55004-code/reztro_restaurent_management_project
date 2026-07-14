@@ -4,20 +4,39 @@ import { Button, Col, Form, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 export default function ScheduleForm({ initialData, onSubmit, buttonText }) {
+
+  const defaultDate = initialData?.start_datetime
+    ? initialData.start_datetime.split("T")[0]
+    : (initialData?.date || "");
+
+  const defaultStartTime = initialData?.start_datetime && initialData.start_datetime.includes("T")
+    ? initialData.start_datetime.split("T")[1].substring(0, 5)
+    : (initialData?.startTime || "");
+
+  const defaultEndTime = initialData?.end_datetime && initialData.end_datetime.includes("T")
+    ? initialData.end_datetime.split("T")[1].substring(0, 5)
+    : (initialData?.endTime || "");
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       title: initialData?.title || "",
-      type: initialData?.type || "",
-      date: initialData?.date || "",
-      startTime: initialData?.startTime || "",
-      endTime: initialData?.endTime || "",
+      type: initialData?.schedule_type || initialData?.type || "",
+      date: defaultDate,
+      startTime: defaultStartTime,
+      endTime: defaultEndTime,
       location: initialData?.location || "",
-      team: initialData?.team?.join(", ") || "",
-      members: initialData?.members?.join(", ") || "",
+      team: Array.isArray(initialData?.team)
+        ? initialData.team.join(", ")
+        : (initialData?.team || ""),
+      members: Array.isArray(initialData?.members)
+        ? initialData.members.join(", ")
+        : (initialData?.members || ""),
       extraMembers: initialData?.extraMembers || 0,
       notes: initialData?.notes || "",
     },
@@ -37,8 +56,13 @@ export default function ScheduleForm({ initialData, onSubmit, buttonText }) {
                 isInvalid={!!errors.title}
                 {...register("title", {
                   required: "Schedule title is required",
+                  pattern: {
+                    value: /^[A-Za-z\s]+$/,
+                    message: "Only letters and spaces are allowed",
+                  },
                 })}
               />
+
               <Form.Control.Feedback type="invalid">
                 {errors.title?.message}
               </Form.Control.Feedback>
@@ -124,6 +148,11 @@ export default function ScheduleForm({ initialData, onSubmit, buttonText }) {
                 isInvalid={!!errors.location}
                 {...register("location", {
                   required: "Location is required",
+                  pattern: {
+                    value: /^[a-zA-Z\s]+$/,
+                    message:
+                      "Name cannot contain numbers or special characters",
+                  },
                 })}
               />
               <Form.Control.Feedback type="invalid">
@@ -166,6 +195,11 @@ export default function ScheduleForm({ initialData, onSubmit, buttonText }) {
                 isInvalid={!!errors.team}
                 {...register("team", {
                   required: "Team is required",
+                  pattern: {
+                    value: /^[a-zA-Z\s]+$/,
+                    message:
+                      "Name cannot contain numbers or special characters",
+                  },
                 })}
               />
               <Form.Control.Feedback type="invalid">
@@ -176,9 +210,19 @@ export default function ScheduleForm({ initialData, onSubmit, buttonText }) {
             <Form.Group className="mb-3">
               <Form.Label>Members</Form.Label>
               <Form.Control
-                placeholder="Leave blank if no members (Example with unknown members:  , AB, )"
-                {...register("members")}
+                placeholder="Leave blank if no members (Example: AB, CD, EF)"
+                isInvalid={!!errors.members}
+                {...register("members", {
+                  pattern: {
+                    value: /^[a-zA-Z\s,]*$/,
+                    message:
+                      "Only letters, spaces, and commas (,) are allowed",
+                  },
+                })}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.members?.message}
+              </Form.Control.Feedback>
             </Form.Group>
 
             <Form.Group className="mb-4">
@@ -186,10 +230,14 @@ export default function ScheduleForm({ initialData, onSubmit, buttonText }) {
               <Form.Control
                 type="number"
                 placeholder="2"
+                isInvalid={!!errors.extraMembers}
                 {...register("extraMembers", {
                   min: { value: 0, message: "Minimum value is 0" },
                 })}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.extraMembers?.message}
+              </Form.Control.Feedback>
             </Form.Group>
 
             <Button type="submit" className="w-100 schedule-submit-btn">

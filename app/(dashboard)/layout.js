@@ -1,11 +1,52 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 import Footer from "@/components/footer";
 import Header from "@/components/header";
 import Sidenav from "@/components/sidenav";
 import { ToastContainer } from "react-toastify";
 
 export default function Layout({ children }) {
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("idToken");
+
+    if (!token) {
+      router.replace("/signin");
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(
+        atob(token.split(".")[1])
+      );
+
+      if (payload.exp * 1000 < Date.now()) {
+
+        localStorage.clear();
+        sessionStorage.clear();
+
+        document.cookie =
+          "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+        router.replace("/signin");
+      }
+
+    } catch (error) {
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      document.cookie =
+        "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+      router.replace("/signin");
+    }
+  }, [router]);
 
   return (
     <div className="d-flex min-vh-100">
@@ -35,43 +76,3 @@ export default function Layout({ children }) {
     </div>
   );
 }
-
-// import { Container, Row, Col } from "react-bootstrap";
-// import Sidenav from "@/components/sidenav";
-// import Footer from "@/components/footer";
-// import Header from "@/components/header";
-
-// export default function Layout({ children }) {
-//   return (
-//     <Container fluid className="min-vh-100 p-0">
-//       <Row className="g-0 min-vh-100">
-
-//         {/* Sidebar */}
-//         <Col
-//           md={1}
-//           lg={2}
-//           className="d-none d-md-block"
-//         >
-//           <Sidenav />
-//         </Col>
-
-//         {/* Main Content */}
-//         <Col
-//           xs={12}
-//           md={11}
-//           lg={10}
-//           className="d-flex flex-column bg-dashboard min-vh-100"
-//         >
-//           <Header />
-
-//           <main className="flex-grow-1 p-4">
-//             {children}
-//           </main>
-
-//           <Footer />
-//         </Col>
-
-//       </Row>
-//     </Container>
-//   );
-// }

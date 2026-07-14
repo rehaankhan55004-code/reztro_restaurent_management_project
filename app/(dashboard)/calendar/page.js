@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import enUS from "date-fns/locale/en-US";
-import { Card, Col, Dropdown, Row } from "react-bootstrap";
+import { Card, Col, Dropdown, Row, Spinner } from "react-bootstrap";
 import { X, ChevronDown, CalendarWeek, Clock, GeoAlt } from "react-bootstrap-icons";
-import { calendarSchedules } from "@/data/CalendarData";
+import { calendarService } from "@/services/calendarService";
 import Link from "next/link";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/calendar/calendar.scss";
@@ -30,15 +30,49 @@ const getEventClass = (type) => {
   return "event";
 };
 
-const convertToDateTime = (date, time) => {
-  return new Date(`${date} ${time}`);
-};
-
 export default function CalendarPage() {
-  const [activeDate, setActiveDate] = useState(new Date(2035, 9, 1));
+  const [calendarSchedules, setCalendarSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeDate, setActiveDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarView, setCalendarView] = useState("month");
   const [dropdownYear, setDropdownYear] = useState(activeDate.getFullYear());
+
+  useEffect(() => {
+    const fetchSchedulesAndMembers = async () => {
+      try {
+        setLoading(true);
+        const response = await calendarService.getSchedules();
+        const schedulesRaw = Array.isArray(response.data) ? response.data : response || [];
+
+        const fullSchedulesData = await Promise.all(
+          schedulesRaw.map(async (schedule) => {
+            const scheduleId = schedule.schedule_id || schedule.id;
+
+            if (scheduleId && !schedule.members && !schedule.team && !schedule.schedule_members) {
+              try {
+                const membersRes = await calendarService.getMembersBySchedule(scheduleId);
+                const membersData = Array.isArray(membersRes.data) ? membersRes.data : membersRes || [];
+                return { ...schedule, fetched_members: membersData };
+              } catch (err) {
+                console.error(`Failed to load members for schedule ${scheduleId}:`, err);
+                return { ...schedule, fetched_members: [] };
+              }
+            }
+            return schedule;
+          })
+        );
+
+        setCalendarSchedules(fullSchedulesData);
+      } catch (error) {
+        console.error("Failed to load backend schedules:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedulesAndMembers();
+  }, []);
 
   const monthOptions = Array.from({ length: 12 }, (_, index) => ({
     label: new Date(dropdownYear, index, 1).toLocaleString("en-US", {
@@ -50,22 +84,33 @@ export default function CalendarPage() {
 
   const events = useMemo(() => {
     return calendarSchedules.map((item) => {
-      const [startTime, endTime] = item.time.split(" - ");
+      const startDate = item.start_datetime ? new Date(item.start_datetime) : new Date();
+      const endDate = item.end_datetime ? new Date(item.end_datetime) : startDate;
+
+      const finalMembers = item.members || item.team || item.schedule_members || item.fetched_members || [];
 
       return {
         ...item,
-        start: convertToDateTime(item.date, startTime),
-        end: convertToDateTime(item.date, endTime),
+        title: item.title || "No Title",
+        type: item.schedule_type || "Events",
+        start: startDate,
+        end: endDate,
+        date: item.start_datetime ? format(startDate, "yyyy-MM-dd") : "",
+        time: item.start_datetime && item.end_datetime
+          ? `${format(startDate, "h:mm aaa")} - ${format(endDate, "h:mm aaa")}`
+          : "N/A",
+        computedMembers: finalMembers
       };
     });
-  }, []);
+  }, [calendarSchedules]);
 
   const eventCounts = useMemo(() => {
     return calendarSchedules.reduce((acc, item) => {
-      acc[item.type] = (acc[item.type] || 0) + 1;
+      const type = item.schedule_type || "Events";
+      acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {});
-  }, []);
+  }, [calendarSchedules]);
 
   const viewRangeTitle = useMemo(() => {
     if (calendarView === "day") {
@@ -83,16 +128,10 @@ export default function CalendarPage() {
     return "";
   }, [activeDate, calendarView]);
 
+  const selectedDateKey = selectedDate ? format(selectedDate, "yyyy-MM-dd") : "";
+  const selectedDateLabel = selectedDate ? format(selectedDate, "MMM d, yyyy") : "";
 
-  const selectedDateKey = selectedDate
-    ? format(selectedDate, "yyyy-MM-dd")
-    : "";
-
-  const selectedDateLabel = selectedDate
-    ? format(selectedDate, "MMM d, yyyy")
-    : "";
-
-  const selectedEvents = calendarSchedules.filter(
+  const selectedEvents = events.filter(
     (item) => item.date === selectedDateKey,
   );
 
@@ -184,7 +223,7 @@ export default function CalendarPage() {
                     href="/calendar/add-schedule"
                     className="add-schedule-btn text-decoration-none d-inline-flex align-items-center justify-content-center"
                   >
-                    <span className="add-text">+ Add Schedule</span>
+                    <span className="add-text">Add Schedule</span>
                     <span className="add-icon">+</span>
                   </Link>
                 </div>
@@ -198,15 +237,8 @@ export default function CalendarPage() {
                         type="button"
                         onClick={() => {
                           const newDate = new Date(activeDate);
-
-                          if (calendarView === "day") {
-                            newDate.setDate(newDate.getDate() - 1);
-                          }
-
-                          if (calendarView === "week") {
-                            newDate.setDate(newDate.getDate() - 7);
-                          }
-
+                          if (calendarView === "day") newDate.setDate(newDate.getDate() - 1);
+                          if (calendarView === "week") newDate.setDate(newDate.getDate() - 7);
                           setActiveDate(newDate);
                           setSelectedDate(null);
                         }}
@@ -220,15 +252,8 @@ export default function CalendarPage() {
                         type="button"
                         onClick={() => {
                           const newDate = new Date(activeDate);
-
-                          if (calendarView === "day") {
-                            newDate.setDate(newDate.getDate() + 1);
-                          }
-
-                          if (calendarView === "week") {
-                            newDate.setDate(newDate.getDate() + 7);
-                          }
-
+                          if (calendarView === "day") newDate.setDate(newDate.getDate() + 1);
+                          if (calendarView === "week") newDate.setDate(newDate.getDate() + 7);
                           setActiveDate(newDate);
                           setSelectedDate(null);
                         }}
@@ -237,6 +262,8 @@ export default function CalendarPage() {
                       </button>
                     </div>
                   )}
+
+                  {/* Dynamic calculations applied to labels directly */}
                   <div className="calendar-legends">
                     <span className="meeting">
                       Meetings <b>({eventCounts["Meetings"] || 0})</b>
@@ -247,8 +274,7 @@ export default function CalendarPage() {
                     </span>
 
                     <span className="check">
-                      Inventory Checks{" "}
-                      <b>({eventCounts["Inventory Checks"] || 0})</b>
+                      Inventory Checks <b>({eventCounts["Inventory Checks"] || 0})</b>
                     </span>
 
                     <span className="event">
@@ -256,61 +282,65 @@ export default function CalendarPage() {
                     </span>
                   </div>
 
-                  <Calendar
-                    localizer={localizer}
-                    events={events}
-                    date={activeDate}
-                    view={calendarView}
-                    views={["day", "week", "month"]}
-                    toolbar={false}
-                    startAccessor="start"
-                    endAccessor="end"
-                    selectable="ignoreEvents"
-                    step={60}
-                    timeslots={1}
-                    min={new Date(2035, 0, 1, 0, 0)}
-                    max={new Date(2035, 0, 1, 23, 59)}
-                    formats={{
-                      dateFormat: "d",
-                      dayFormat: "d",
-                      weekdayFormat: "EEE",
-                      timeGutterFormat: "h:mm aaa",
-                      eventTimeRangeFormat: ({ start, end }, culture, localizer) =>
-                        `${localizer.format(start, "h:mm aaa", culture)} - ${localizer.format(
-                          end,
-                          "h:mm aaa",
-                          culture
-                        )}`,
-                    }}
-                    onNavigate={(date) => setActiveDate(date)}
-                    onView={(view) => setCalendarView(view)}
-                    onSelectSlot={(slotInfo) => setSelectedDate(slotInfo.start)}
-                    onSelectEvent={(event) => setSelectedDate(event.start)}
-                    className="big-calendar"
-                    eventPropGetter={(event) => ({
-                      className: `calendar-event ${getEventClass(event.type)}`,
-                    })}
-                    components={{
-                      event: ({ event }) => (
-                        <div>
-                          <strong>{event.title}</strong>
-                          <small>{event.time}</small>
+                  {loading ? (
+                    <div className="d-flex justify-content-center align-items-center py-5">
+                      <Spinner animation="border" variant="primary" />
+                    </div>
+                  ) : (
+                    <Calendar
+                      localizer={localizer}
+                      events={events}
+                      date={activeDate}
+                      view={calendarView}
+                      views={["day", "week", "month"]}
+                      toolbar={false}
+                      startAccessor="start"
+                      endAccessor="end"
+                      selectable="ignoreEvents"
+                      step={60}
+                      timeslots={1}
+                      formats={{
+                        dateFormat: "d",
+                        dayFormat: "d",
+                        weekdayFormat: "EEE",
+                        timeGutterFormat: "h:mm aaa",
+                        eventTimeRangeFormat: ({ start, end }, culture, localizer) =>
+                          `${localizer.format(start, "h:mm aaa", culture)} - ${localizer.format(
+                            end,
+                            "h:mm aaa",
+                            culture
+                          )}`,
+                      }}
+                      onNavigate={(date) => setActiveDate(date)}
+                      onView={(view) => setCalendarView(view)}
+                      onSelectSlot={(slotInfo) => setSelectedDate(slotInfo.start)}
+                      onSelectEvent={(event) => setSelectedDate(event.start)}
+                      className="big-calendar"
+                      eventPropGetter={(event) => ({
+                        className: `calendar-event ${getEventClass(event.type)}`,
+                      })}
+                      components={{
+                        event: ({ event }) => (
+                          <div>
+                            <strong>{event.title}</strong>
+                            <small>{event.time}</small>
 
-                          <div className="event-users">
-                            {(event.members || []).slice(0, 3).map((member, index) => (
-                              <i key={`${event.id}-member-${index}`}>
-                                {member?.trim() || ""}
-                              </i>
-                            ))}
+                            <div className="event-users">
+                              {(event.computedMembers || []).slice(0, 3).map((member, index) => (
+                                <i key={`${event.schedule_id || index}-member-${index}`}>
+                                  {member?.member_initials}
+                                </i>
+                              ))}
 
-                            {event.extraMembers > 0 && (
-                              <em>+{event.extraMembers} others</em>
-                            )}
+                              {event.computedMembers.length > 3 && (
+                                <em>+{event.computedMembers.length - 3} others</em>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ),
-                    }}
-                  />
+                        ),
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             </Card.Body>
@@ -335,7 +365,7 @@ export default function CalendarPage() {
 
                 {selectedEvents.length > 0 ? (
                   selectedEvents.map((event, index) => (
-                    <div className="schedule-item" key={event.id}>
+                    <div className="schedule-item" key={event.schedule_id || index}>
                       <div className="d-flex align-items-center justify-content-between">
                         <span>Schedule {index + 1}</span>
                         <span>...</span>
@@ -346,45 +376,50 @@ export default function CalendarPage() {
                         {event.type}
                       </label>
 
-                      <p><span><CalendarWeek className="me-1" /></span> {format(new Date(event.date), "MMM d, yyyy")}</p>
+                      <p><span><CalendarWeek className="me-1" /></span> {format(event.start, "MMM d, yyyy")}</p>
                       <p><span><Clock className="me-1" /></span> {event.time}</p>
-                      <p><span><GeoAlt className="me-1" /></span> {event.location}</p>
+                      <p><span><GeoAlt className="me-1" /></span> {event.location || "N/A"}</p>
 
                       <small>Team</small>
 
                       <div className="schedule-team">
-                        {event.team?.slice(0, 2).map((member, index) => (
-                          <span key={`${event.id}-team-${index}`} className="team-chip">
-                            <i />
-                            {member}
+                        {(event.computedMembers || []).slice(0, 2).map((member, idx) => (
+                          <span key={`${event.schedule_id || index}-team-${idx}`} className="team-chip">
+                            {member?.member_initials ? <i>{member.member_initials}</i> : <i>{member?.member_name?.slice(0, 2).toUpperCase() || "M"}</i>}
+                            {member?.member_name || member}
                           </span>
                         ))}
 
-                        {event.team?.length > 2 && (
+                        {event.computedMembers.length > 2 && (
                           <span className="team-chip team-chip-more">
-                            {event.team.slice(2, 5).map((_, index) => (
-                              <i key={`${event.id}-dot-${index}`} />
+                            {event.computedMembers.slice(2, 5).map((_, idx) => (
+                              <i key={`${event.schedule_id || index}-dot-${idx}`} />
                             ))}
 
-                            <b>+{event.team.length - 2}</b>
-                            <span>{event.team[2]}</span>
+                            <b>+{event.computedMembers.length - 2}</b>
+                            <span>
+                              {typeof event.computedMembers[2] === "object"
+                                ? event.computedMembers[2]?.member_name
+                                : event.computedMembers[2]}
+                            </span>
                           </span>
                         )}
                       </div>
 
                       <small>Notes</small>
-                      <p className="notes">{event.notes}</p>
+                      <p className="notes">{event.notes || "No notes available."}</p>
                     </div>
                   ))
                 ) : (
                   <div className="schedule-empty">
-                    No schedule found for  {selectedDateLabel} date.
+                    No schedule found for {selectedDateLabel} date.
                   </div>
                 )}
               </Card.Body>
             </Card>
           </Col>
         )}
+
         {selectedDate && (
           <div className="calendar-mobile-drawer d-md-none">
             <div
@@ -407,7 +442,7 @@ export default function CalendarPage() {
 
               {selectedEvents.length > 0 ? (
                 selectedEvents.map((event, index) => (
-                  <div className="schedule-item" key={event.id}>
+                  <div className="schedule-item" key={event.schedule_id || index}>
                     <div className="d-flex align-items-center justify-content-between">
                       <span>Schedule {index + 1}</span>
                       <span>...</span>
@@ -418,37 +453,39 @@ export default function CalendarPage() {
                       {event.type}
                     </label>
 
-                    <p><span><CalendarWeek className="me-1" /></span> {format(new Date(event.date), "MMM d, yyyy")}</p>
+                    <p><span><CalendarWeek className="me-1" /></span> {format(event.start, "MMM d, yyyy")}</p>
                     <p><span><Clock className="me-1" /></span> {event.time}</p>
-                    <p><span><GeoAlt className="me-1" /></span> {event.location}</p>
+                    <p><span><GeoAlt className="me-1" /></span> {event.location || "N/A"}</p>
 
                     <small>Team</small>
 
                     <div className="schedule-team">
-                      {event.team?.slice(0, 2).map((member, index) => (
+                      {(event.computedMembers || []).slice(0, 2).map((member, idx) => (
                         <span
-                          key={`${event.id}-${member}-${index}`}
+                          key={`${event.schedule_id || index}-${idx}`}
                           className="team-chip"
                         >
-                          <i />
-                          {member}
+                          {member?.member_initials ? <i>{member.member_initials}</i> : <i>{member?.member_name?.slice(0, 2).toUpperCase() || "M"}</i>}
+                          {member?.member_name || member}
                         </span>
                       ))}
 
-                      {event.team?.length > 2 && (
+                      {event.computedMembers.length > 2 && (
                         <span className="team-chip">
-                          {event.team.slice(2, 5).map((_, index) => (
-                            <i key={`${event.id}-dot-${index}`} />
+                          {event.computedMembers.slice(2, 5).map((_, idx) => (
+                            <i key={`${event.schedule_id || index}-dot-${idx}`} />
                           ))}
 
-                          <b>+{event.team.length - 2}</b>
-                          {event.team[2]}
+                          <b>+{event.computedMembers.length - 2}</b>
+                          {typeof event.computedMembers[2] === "object"
+                            ? event.computedMembers[2]?.member_name
+                            : event.computedMembers[2]}
                         </span>
                       )}
                     </div>
 
                     <small>Notes</small>
-                    <p className="notes">{event.notes}</p>
+                    <p className="notes">{event.notes || "No notes available."}</p>
                   </div>
                 ))
               ) : (
