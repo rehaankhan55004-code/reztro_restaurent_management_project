@@ -26,7 +26,6 @@ export default function ReorderStockPage() {
                 const response = await inventoryService.getInventoryItemById(id);
                 const item = response?.data?.item || response?.data || {};
 
-                // Safe category extraction (same as Update Stock)
                 const displayCategory =
                     typeof item.category === 'object'
                         ? (item.category?.category_name || item.category?.name)
