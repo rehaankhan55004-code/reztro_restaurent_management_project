@@ -2,16 +2,19 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Alert, Button, Container, Spinner } from "react-bootstrap";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DriverForm from "@/components/drivers/DriverForm";
 import { driverService } from "@/services/driverService";
 
 export default function EditDriverPage() {
     const router = useRouter();
-    const params = useParams();
+    const [id, setId] = useState(null);
 
-    const driverId = params?.driverId;
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        setId(params.get("id"));
+    }, []);
 
     const [driver, setDriver] = useState(null);
     const [pageLoading, setPageLoading] = useState(true);
@@ -37,7 +40,7 @@ export default function EditDriverPage() {
     };
 
     const fetchDriver = useCallback(async () => {
-        if (!driverId) {
+        if (!id) {
             setError("Driver ID not found");
             setPageLoading(false);
             return;
@@ -47,7 +50,7 @@ export default function EditDriverPage() {
             setPageLoading(true);
             setError("");
 
-            const response = await driverService.getDriverById(driverId);
+            const response = await driverService.getDriverById(id);
 
             const driverData =
                 response?.data?.driver ||
@@ -63,7 +66,7 @@ export default function EditDriverPage() {
         } finally {
             setPageLoading(false);
         }
-    }, [driverId]);
+    }, [id]);
 
     useEffect(() => {
         fetchDriver();
@@ -74,7 +77,7 @@ export default function EditDriverPage() {
             setSaving(true);
             setError("");
 
-            await driverService.updateDriver(driverId, payload);
+            await driverService.updateDriver(id, payload);
 
             router.push("/drivers");
         } catch (error) {
@@ -84,7 +87,7 @@ export default function EditDriverPage() {
         }
     };
 
-    if (pageLoading) {
+    if (pageLoading || !id) {
         return (
             <div className="bg-dashboard py-4 min-vh-100">
                 <Container fluid>

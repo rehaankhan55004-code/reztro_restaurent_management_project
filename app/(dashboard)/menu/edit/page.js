@@ -1,18 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import MenuForm from "@/components/menus/MenuForm";
 import { toast } from "react-toastify";
 import { menuService } from "@/services/menuService";
 
 export default function EditMenuPage() {
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id");
 
   const router = useRouter();
 
   const [menu, setMenu] = useState(null);
+  const [id, setId] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setId(params.get("id"));
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -20,7 +24,7 @@ export default function EditMenuPage() {
     const fetchMenuDetails = async () => {
       try {
         const response = await menuService.getMenuItemById(id);
-        
+
         const data =
           response?.data?.data ||
           response?.data?.menu_item ||

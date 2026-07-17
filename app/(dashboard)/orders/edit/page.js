@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import {
   Badge,
@@ -64,9 +64,12 @@ const defaultValues = {
 
 function EditOrderContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [orderId, setOrderId] = useState(null);
 
-  const orderId = searchParams.get("id");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setOrderId(params.get("id"));
+  }, []);
 
   const {
     order,
@@ -206,16 +209,16 @@ function EditOrderContent() {
         table_no:
           (order.orderType || order.order_type) === "Dine-In"
             ? order.tableNo ||
-              order.table_no ||
-              order.dine_in_details?.table_no ||
-              ""
+            order.table_no ||
+            order.dine_in_details?.table_no ||
+            ""
             : "",
         guest_count:
           (order.orderType || order.order_type) === "Dine-In"
             ? order.guestCount ||
-              order.guest_count ||
-              order.dine_in_details?.guest_count ||
-              ""
+            order.guest_count ||
+            order.dine_in_details?.guest_count ||
+            ""
             : "",
       },
 
@@ -398,9 +401,6 @@ function EditOrderContent() {
         notes: "",
       });
 
-      console.log("ORDER ID:", orderId);
-      console.log("MENU ID:", menuId);
-
       const newItem = response?.data?.data || response?.data || response;
 
       append({
@@ -545,34 +545,34 @@ function EditOrderContent() {
         dine_in_details:
           data.order_type === "Dine-In"
             ? {
-                table_no: data.dine_in_details.table_no || null,
-                guest_count: Number(data.dine_in_details.guest_count) || null,
-              }
+              table_no: data.dine_in_details.table_no || null,
+              guest_count: Number(data.dine_in_details.guest_count) || null,
+            }
             : null,
 
         takeaway_details:
           data.order_type === "Takeaway"
             ? {
-                pickup_time: data.takeaway_details.pickup_time || null,
-                pickup_code: data.takeaway_details.pickup_code || null,
-              }
+              pickup_time: data.takeaway_details.pickup_time || null,
+              pickup_code: data.takeaway_details.pickup_code || null,
+            }
             : null,
 
         online_details:
           data.order_type === "Online"
             ? {
-                delivery_address: data.online_details.delivery_address || null,
-                delivery_latitude:
-                  Number(data.online_details.delivery_latitude) || null,
-                delivery_longitude:
-                  Number(data.online_details.delivery_longitude) || null,
-                restaurant_address:
-                  data.online_details.restaurant_address || null,
-                restaurant_latitude:
-                  Number(data.online_details.restaurant_latitude) || null,
-                restaurant_longitude:
-                  Number(data.online_details.restaurant_longitude) || null,
-              }
+              delivery_address: data.online_details.delivery_address || null,
+              delivery_latitude:
+                Number(data.online_details.delivery_latitude) || null,
+              delivery_longitude:
+                Number(data.online_details.delivery_longitude) || null,
+              restaurant_address:
+                data.online_details.restaurant_address || null,
+              restaurant_latitude:
+                Number(data.online_details.restaurant_latitude) || null,
+              restaurant_longitude:
+                Number(data.online_details.restaurant_longitude) || null,
+            }
             : null,
       };
 
@@ -609,7 +609,7 @@ function EditOrderContent() {
     },
   ];
 
-  if (orderLoading) {
+  if (orderLoading || !orderId) {
     return (
       <div className="bg-dashboard py-4 min-vh-100">
         <Container fluid>
@@ -726,11 +726,10 @@ function EditOrderContent() {
                         <Col md={4} key={type.value}>
                           <button
                             type="button"
-                            className={`w-100 border rounded-4 bg-white p-3 text-center h-100 ${
-                              orderType === type.value
+                            className={`w-100 border rounded-4 bg-white p-3 text-center h-100 ${orderType === type.value
                                 ? "border-primary shadow-sm"
                                 : "border-light"
-                            }`}
+                              }`}
                             onClick={() => setValue("order_type", type.value)}
                           >
                             <div
@@ -854,11 +853,10 @@ function EditOrderContent() {
                         variant={
                           selectedCategory === "All" ? "primary" : "light"
                         }
-                        className={`rounded-3 ${
-                          selectedCategory === "All"
+                        className={`rounded-3 ${selectedCategory === "All"
                             ? "text-white"
                             : "text-dark"
-                        }`}
+                          }`}
                         onClick={() => {
                           setSelectedCategory("All");
                           setMenuPage(1);
@@ -875,11 +873,10 @@ function EditOrderContent() {
                           variant={
                             selectedCategory === category ? "primary" : "light"
                           }
-                          className={`rounded-3 ${
-                            selectedCategory === category
+                          className={`rounded-3 ${selectedCategory === category
                               ? "text-white"
                               : "text-dark"
-                          }`}
+                            }`}
                           onClick={() => {
                             setSelectedCategory(category);
                             setMenuPage(1);
@@ -1011,11 +1008,10 @@ function EditOrderContent() {
                                   variant={
                                     menuPage === page ? "primary" : "light"
                                   }
-                                  className={`rounded-3 border ${
-                                    menuPage === page
+                                  className={`rounded-3 border ${menuPage === page
                                       ? "text-white"
                                       : "text-dark"
-                                  }`}
+                                    }`}
                                   onClick={() => setMenuPage(page)}
                                 >
                                   {page}

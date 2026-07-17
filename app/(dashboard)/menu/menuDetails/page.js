@@ -14,7 +14,6 @@ import {
 } from "react-bootstrap-icons";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useMenuDetails } from "@/hooks/useMenuDetails";
 import { menuService } from "@/services/menuService";
 import { useRouter } from "next/navigation";
@@ -22,17 +21,20 @@ import { useRouter } from "next/navigation";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function MenuDetailsPage() {
+  const [id, setId] = useState(null);
   const [orderFilter, setOrderFilter] = useState("This Week");
   const [liveChartData, setLiveChartData] = useState([]);
-
-  const searchParams = useSearchParams();
-  const id = searchParams?.get("id");
 
   const { menuDetails, menuLoading, menuError, reviews } = useMenuDetails(id);
 
   const [similarMenuItems, setSimilarMenuItems] = useState([]);
 
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setId(params.get("id"));
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -106,37 +108,37 @@ export default function MenuDetailsPage() {
 
         const similar = Array.isArray(data)
           ? data
-              .filter((item) => {
-                const itemId = item.menu_id || item.id;
+            .filter((item) => {
+              const itemId = item.menu_id || item.id;
 
-                const itemCategories = String(
-                  item.category_names ||
-                  item.category_name ||
-                  item.category ||
-                  "",
-                )
-                  .split(",")
-                  .map((cat) => cat.trim().toLowerCase())
-                  .filter(Boolean);
+              const itemCategories = String(
+                item.category_names ||
+                item.category_name ||
+                item.category ||
+                "",
+              )
+                .split(",")
+                .map((cat) => cat.trim().toLowerCase())
+                .filter(Boolean);
 
-                return (
-                  itemId !== menuDetails.id &&
-                  itemCategories.some((cat) => currentCategories.includes(cat))
-                );
-              })
-              .slice(0, 4)
-              .map((item) => ({
-                id: item.menu_id || item.id,
-                title: item.name || "",
-                category:
-                  item.category_names ||
-                  item.category_name ||
-                  item.category ||
-                  "",
-                image: item.image_url || item.image || "",
-                rating: Number(item.rating || 0),
-                price: Number(item.price || 0),
-              }))
+              return (
+                itemId !== menuDetails.id &&
+                itemCategories.some((cat) => currentCategories.includes(cat))
+              );
+            })
+            .slice(0, 4)
+            .map((item) => ({
+              id: item.menu_id || item.id,
+              title: item.name || "",
+              category:
+                item.category_names ||
+                item.category_name ||
+                item.category ||
+                "",
+              image: item.image_url || item.image || "",
+              rating: Number(item.rating || 0),
+              price: Number(item.price || 0),
+            }))
           : [];
 
         setSimilarMenuItems(similar);

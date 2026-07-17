@@ -20,8 +20,6 @@ export default function PurchaseForm({
 
   const isEdit = !!initialData;
 
-  // const lastPoNo = orders[0]?.po_no;
-
   const {
     register,
     handleSubmit,
@@ -152,26 +150,60 @@ export default function PurchaseForm({
     loadInventory();
   }, []);
 
+  // const filteredItems = useMemo(() => {
+  //   const search = itemSearch.trim().toLowerCase();
+  //   if (!search) return [];
+  //   return inventoryItems
+  //     .filter((item) => (item.item_name || "").toLowerCase().includes(search))
+  //     .slice(0, 8);
+  // }, [inventoryItems, itemSearch]);
   const filteredItems = useMemo(() => {
     const search = itemSearch.trim().toLowerCase();
-    if (!search) return [];
+
+    if (!search) {
+      return inventoryItems.slice(0, 20);
+    }
+
     return inventoryItems
-      .filter((item) => (item.item_name || "").toLowerCase().includes(search))
-      .slice(0, 8);
+      .filter((item) =>
+        (item.item_name || "").toLowerCase().includes(search)
+      )
+      .slice(0, 20);
   }, [inventoryItems, itemSearch]);
 
   const handleSelectItem = (itemId) => {
     const selectedItem = inventoryItems.find(
-      (item) => String(item.inventory_id || item.id) === String(itemId),
+      (item) => String(item.inventory_id || item.id) === String(itemId)
     );
+
     if (!selectedItem) return;
 
     setValue("itemName", selectedItem.item_name || "");
     setValue("inventoryId", selectedItem.inventory_id || "");
-    setValue("itemCategory", selectedItem.item_category || "");
-    setValue("vendorSupplier", selectedItem.vendor_supplier || "");
+
+    setValue(
+      "itemCategory",
+      selectedItem.category?.category_name ||
+      selectedItem.category_name ||
+      selectedItem.item_category ||
+      ""
+    );
+
+    setValue(
+      "vendorSupplier",
+      selectedItem.vendor_supplier ||
+      selectedItem.vendorSupplier ||
+      selectedItem.vendor?.supplier_name ||
+      selectedItem.supplier_name ||
+      selectedItem.supplier ||
+      ""
+    );
+
     setValue("price", selectedItem.price || "");
+
     setItemSearch(selectedItem.item_name);
+
+    // Dropdown close
     setShowItemDropdown(false);
   };
 
@@ -190,6 +222,12 @@ export default function PurchaseForm({
     }
   }, [watchedStatus, setValue]);
 
+  const readOnlyStyle = {
+    backgroundColor: "#d0d3d2",
+    borderColor: "#d0d3d2",
+    cursor: "not-allowed",
+  };
+
   const handleFormSubmit = (data) => {
     const totalAmount = Number(data.price || 0) * Number(data.qty || 0);
     onSubmit({ ...data, total: totalAmount });
@@ -207,15 +245,30 @@ export default function PurchaseForm({
             <Form.Group className="mb-3">
               <Form.Label>Item Name</Form.Label>
               <Form.Control
-                {...register("itemName", { required: "Item name is required" })}
+                {...register("itemName", {
+                  required: "Item name is required",
+                })}
                 placeholder="Search item by name"
                 value={itemSearch}
+                readOnly={isEdit}
+                style={isEdit ? readOnlyStyle : {}}
                 onChange={(e) => {
+                  if (isEdit) return;
+
                   setItemSearch(e.target.value);
                   setValue("itemName", e.target.value);
                   setShowItemDropdown(true);
                 }}
-                onFocus={() => setShowItemDropdown(true)}
+                onFocus={() => {
+                  if (!isEdit) {
+                    setShowItemDropdown(true);
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    setShowItemDropdown(false);
+                  }, 200);
+                }}
               />
               {showItemDropdown && filteredItems.length > 0 && (
                 <div
@@ -249,7 +302,8 @@ export default function PurchaseForm({
                   <Form.Control
                     type="number"
                     isInvalid={!!errors.inventoryId}
-                    disabled={true}
+                    readOnly
+                    style={readOnlyStyle}
                     {...register("inventoryId", {
                       required: "Inventory Item is required",
                     })}
@@ -262,7 +316,8 @@ export default function PurchaseForm({
                   <Form.Control
                     placeholder="PO1001"
                     isInvalid={!!errors.orderId}
-                    disabled={true}
+                    readOnly
+                    style={readOnlyStyle}
                     {...register("orderId", {
                       required: "Order ID is required",
                     })}
@@ -276,7 +331,8 @@ export default function PurchaseForm({
                 <Form.Group className="mb-3">
                   <Form.Label>Item Category</Form.Label>
                   <Form.Control
-                    disabled={disabled}
+                    readOnly
+                    style={readOnlyStyle}
                     isInvalid={!!errors.itemCategory}
                     {...register("itemCategory", {
                       required: "Category is required",
@@ -288,6 +344,8 @@ export default function PurchaseForm({
                 <Form.Group className="mb-3">
                   <Form.Label>Vendor / Supplier</Form.Label>
                   <Form.Control
+                    readOnly={isEdit}
+                    style={isEdit ? readOnlyStyle : {}}
                     disabled={disabled}
                     isInvalid={!!errors.vendorSupplier}
                     {...register("vendorSupplier", {

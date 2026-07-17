@@ -330,7 +330,7 @@ export default function DriversPage() {
                         <td className="text-end">
                           <Button
                             as={Link}
-                            href={`/drivers/${driver.driver_id}/edit`}
+                            href={`/drivers/edit?id=${driver.driver_id}`}
                             variant="light"
                             size="sm"
                             className="rounded-3 border me-2"

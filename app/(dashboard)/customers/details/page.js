@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Edit } from "lucide-react";
 import { customerService } from "@/services/customerService";
@@ -10,19 +10,27 @@ import { toast } from "react-toastify";
 
 export default function CustomerDetailsPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-
-    const customerId = searchParams.get("id");
 
     const [customer, setCustomer] = useState(null);
+    const [customerId, setCustomerId] = useState(null);
     const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const customerIdFromUrl = params.get("id");
+
+        setCustomerId(customerIdFromUrl);
+    }, []);
+
+    useEffect(() => {
+        if (customerId === null) return;
+
         const fetchCustomer = async () => {
             try {
                 setPageLoading(true);
 
-                const response = await customerService.getCustomerById(customerId);
+                const response =
+                    await customerService.getCustomerById(customerId);
 
                 const customerData =
                     response?.data?.customer ||
@@ -34,19 +42,16 @@ export default function CustomerDetailsPage() {
 
                 setCustomer(customerData);
             } catch (error) {
-                toast.error(error.message || "Failed to fetch customer");
+                toast.error(
+                    error?.message || "Failed to fetch customer"
+                );
                 setCustomer(null);
             } finally {
                 setPageLoading(false);
             }
         };
 
-        if (customerId) {
-            fetchCustomer();
-        } else {
-            toast.error("Customer ID not found");
-            setPageLoading(false);
-        }
+        fetchCustomer();
     }, [customerId]);
 
     const getValidImageUrl = (imageUrl) => {
@@ -65,7 +70,7 @@ export default function CustomerDetailsPage() {
         return null;
     };
 
-    if (pageLoading) {
+    if (pageLoading || !customerId) {
         return (
             <div className="bg-dashboard py-4 min-vh-100">
                 <Container fluid>

@@ -802,8 +802,6 @@ export default function AddOrderPage() {
                 },
             };
 
-            console.log("CREATE ORDER PAYLOAD:", payload);
-
             const response = await orderService.createOrder(payload);
 
             toast.success("Order created successfully");

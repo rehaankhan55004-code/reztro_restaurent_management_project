@@ -3,49 +3,52 @@
 import { useEffect, useState } from "react";
 import { Container, Card, Spinner, Alert, Button } from "react-bootstrap";
 import { ArrowLeft } from "react-bootstrap-icons";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { purchaseService } from "@/services/purchaseService";
 import PurchaseForm from "@/components/purchase/PurchaseForm";
 import { toast } from "react-toastify";
 
 export default function EditPurchaseOrderPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
-  const orderId = searchParams.get("id");
+  const router = useRouter();
 
   const [initialData, setInitialData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [orderId, setOrderId] = useState(null);
 
   useEffect(() => {
-    if (!orderId) {
-      setError("URL me koi Order ID (?id=...) nahi mili.");
-      setLoading(false);
-      return;
-    }
+    const params = new URLSearchParams(window.location.search);
+    setOrderId(params.get("id"));
+  }, []);
+
+  useEffect(() => {
+    if (orderId === null) return;
 
     const loadOrderData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await purchaseService.getPurchaseOrderById(orderId);
+        const response =
+          await purchaseService.getPurchaseOrderById(orderId);
 
         const data = response?.data || response;
+
         if (data) {
           setInitialData(data);
         } else {
-          setError("Database me is ID ka koi data nahi mila.");
+          setError("No purchase order found for the provided ID.");
         }
       } catch (err) {
         console.error(err);
+
         setError(
           err.response?.data?.message ||
           err.message ||
-          "Failed to load purchase order.",
+          "Failed to load purchase order."
         );
       } finally {
         setLoading(false);
@@ -89,11 +92,11 @@ export default function EditPurchaseOrderPage() {
     }
   };
 
-  if (loading) {
+  if (orderId === null || loading){
     return (
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
-        <p className="mt-2 text-muted">Database se data fetch ho raha hai...</p>
+        <p className="mt-2 text-muted">Loading...</p>
       </Container>
     );
   }

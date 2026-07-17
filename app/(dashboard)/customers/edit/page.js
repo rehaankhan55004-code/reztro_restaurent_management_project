@@ -2,30 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { Button, Container, Spinner } from "react-bootstrap";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CustomerForm from "@/components/customers/customerForm";
 import { customerService } from "@/services/customerService";
 import { toast } from "react-toastify";
 
 export default function EditCustomerPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-
-    const customerId = searchParams.get("id");
+    const [id, setId] = useState(null);
 
     const [customer, setCustomer] = useState(null);
     const [pageLoading, setPageLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    const router = useRouter();
+
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        setId(params.get("id"));
+    }, []);
+
+    useEffect(() => {
+        if (id === null) return;
+
         const fetchCustomer = async () => {
             try {
                 setPageLoading(true);
 
-                const response = await customerService.getCustomerById(
-                    customerId
-                );
+                const response = await customerService.getCustomerById(id);
 
                 const customerData =
                     response?.data?.customer ||
@@ -37,26 +41,21 @@ export default function EditCustomerPage() {
 
                 setCustomer(customerData);
             } catch (error) {
-                toast.error(error.message || "Failed to fetch customer");
+                toast.error(error?.message || "Failed to fetch customer");
                 setCustomer(null);
             } finally {
                 setPageLoading(false);
             }
         };
 
-        if (customerId) {
-            fetchCustomer();
-        } else {
-            toast.error("Customer ID not found");
-            setPageLoading(false);
-        }
-    }, [customerId]);
+        fetchCustomer();
+    }, [id]);
 
     const handleUpdateCustomer = async (payload) => {
         try {
             setSaving(true);
 
-            await customerService.updateCustomer(customerId, {
+            await customerService.updateCustomer(id, {
                 full_name: payload.full_name,
                 email: payload.email,
                 phone: payload.phone,
@@ -78,7 +77,7 @@ export default function EditCustomerPage() {
         }
     };
 
-    if (pageLoading) {
+    if (pageLoading || !id) {
         return (
             <div className="bg-dashboard py-4 min-vh-100">
                 <Container fluid>

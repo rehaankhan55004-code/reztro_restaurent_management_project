@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Card, Col, Form, Row, Spinner } from "react-bootstrap";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { inventoryService } from "@/services/inventoryService";
@@ -10,8 +10,7 @@ import { inventoryService } from "@/services/inventoryService";
 export default function ReorderStockPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const searchParams = useSearchParams();
-    const id = searchParams.get("id");
+    const [id, setId] = useState(null);
 
     const {
         register,
@@ -21,20 +20,38 @@ export default function ReorderStockPage() {
     } = useForm();
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const inventoryId = params.get("id");
+
+        setId(inventoryId);
+    }, []);
+
+    useEffect(() => {
+        if (!id) return;
+
         const fetchItem = async () => {
             try {
                 const response = await inventoryService.getInventoryItemById(id);
                 const item = response?.data?.item || response?.data || {};
 
                 const displayCategory =
-                    typeof item.category === 'object'
+                    typeof item.category === "object"
                         ? (item.category?.category_name || item.category?.name)
-                        : (item.category_name || item.category || item.item_category || item.itemCategory || "");
+                        : (
+                            item.category_name ||
+                            item.category ||
+                            item.item_category ||
+                            item.itemCategory ||
+                            ""
+                        );
 
                 reset({
                     item_name: item.item_name || item.itemName,
                     category: displayCategory,
-                    current_stock: item.qty_in_stock !== undefined ? item.qty_in_stock : item.qtyInStock,
+                    current_stock:
+                        item.qty_in_stock !== undefined
+                            ? item.qty_in_stock
+                            : item.qtyInStock,
                 });
             } catch (error) {
                 toast.error("Failed to load item details");
@@ -43,25 +60,20 @@ export default function ReorderStockPage() {
             }
         };
 
-        if (id && id !== "undefined") {
-            fetchItem();
-        } else {
-            setLoading(false);
-            toast.error("Invalid Item ID");
-        }
+        fetchItem();
     }, [id, reset]);
 
     const submitHandler = async (data) => {
         try {
-            
+
             const payload = {
                 inventory_id: Number(id),
-                movement_type: "Stock In", 
+                movement_type: "Stock In",
                 quantity: Number(data.quantity),
                 note: data.note?.trim() || "Reordered from dashboard",
             };
 
-            
+
             await inventoryService.addStockMovement(payload);
 
             toast.success("Stock reordered successfully!");
@@ -74,7 +86,7 @@ export default function ReorderStockPage() {
         }
     };
 
-    if (loading) {
+    if (loading || !id) {
         return (
             <div className="text-center p-5">
                 <Spinner />
@@ -90,10 +102,6 @@ export default function ReorderStockPage() {
 
     return (
         <Card className="border-0">
-            <Card.Header>
-                <h4>Reorder Stock</h4>
-            </Card.Header>
-
             <Card.Body>
                 <Form onSubmit={handleSubmit(submitHandler)}>
                     <Row>

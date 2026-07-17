@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Card, Col, Form, Row, Spinner } from "react-bootstrap";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { inventoryService } from "@/services/inventoryService";
@@ -11,10 +11,7 @@ export default function UpdateStockPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-
-  const searchParams = useSearchParams();
-
-  const id = searchParams.get("id");
+  const [id, setId] = useState(null);
 
   const {
     register,
@@ -23,9 +20,15 @@ export default function UpdateStockPage() {
     watch,
     formState: { errors },
   } = useForm();
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setId(params.get("id"));
+  }, []);
 
   const currentStock = Number(watch("qty_in_stock") || 0);
   const reorderLevel = Number(watch("qty_in_reorder") || 0);
+
 
   const stockStatus =
     currentStock <= 0
@@ -46,10 +49,10 @@ export default function UpdateStockPage() {
           typeof item.category === "object"
             ? item.category?.category_name || item.category?.name
             : item.category_name ||
-              item.category ||
-              item.item_category ||
-              item.itemCategory ||
-              "";
+            item.category ||
+            item.item_category ||
+            item.itemCategory ||
+            "";
 
         reset({
           item_name: item.item_name || item.itemName,
@@ -70,7 +73,7 @@ export default function UpdateStockPage() {
       }
     };
 
-    if (id && id !== "undefined") {
+    if (id) {
       fetchItem();
     } else {
       setLoading(false);
@@ -93,7 +96,7 @@ export default function UpdateStockPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !id) {
     return (
       <div className="text-center p-5">
         <Spinner />

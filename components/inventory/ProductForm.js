@@ -71,8 +71,8 @@ export default function ProductForm({ initialData, onSubmit, buttonText, disable
             <Form.Group className="mb-3">
               <Form.Label>Image</Form.Label>
               <div className="image-option-tabs d-flex gap-2 mb-2">
-                <Button type="button" size="sm" variant={imageType === "url" ? "primary" : "light"} onClick={() => setImageType("url")}>Image URL</Button>
-                <Button type="button" size="sm" variant={imageType === "file" ? "primary" : "light"} onClick={() => setImageType("file")}>Choose File</Button>
+                <Button type="button" size="sm" className={imageType === "url" ? "active" : ""} onClick={() => setImageType("url")}>Image URL</Button>
+                <Button type="button" size="sm" className={imageType === "file" ? "active" : ""} onClick={() => setImageType("file")}>Choose File</Button>
               </div>
 
               {imageType === "url" ? (

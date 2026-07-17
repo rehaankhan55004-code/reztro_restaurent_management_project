@@ -2,24 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { Button, Card, Col, Form, Row, Spinner } from "react-bootstrap";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { inventoryService } from "@/services/inventoryService";
 
-// Common units ki list dropdown ke liye
 const UNIT_OPTIONS = ["kg", "g", "ltr", "ml", "pcs", "box", "packet"];
 
 export default function EditInventoryItemPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const [id, setId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [itemData, setItemData] = useState(null);
 
-  // mode: "onChange" se validation har keystroke par live check hoga
+  const router = useRouter();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setId(params.get("id"));
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -31,19 +33,28 @@ export default function EditInventoryItemPage() {
 
   // 1. Data Fetching (Categories & Item Details)
   useEffect(() => {
+    if (id === null) return;
+
     const fetchData = async () => {
       try {
         const catRes = await inventoryService.getCategories();
-        const catList = catRes?.data?.categories || catRes?.data || [];
+
+        const catList =
+          catRes?.data?.categories ||
+          catRes?.data ||
+          [];
+
         setCategories(Array.isArray(catList) ? catList : []);
 
-        if (id && id !== "undefined") {
-          const response = await inventoryService.getInventoryItemById(id);
-          const item = response?.data?.item || response?.data || {};
-          setItemData(item);
-        } else {
-          toast.error("Invalid Item ID");
-        }
+        const response =
+          await inventoryService.getInventoryItemById(id);
+
+        const item =
+          response?.data?.item ||
+          response?.data ||
+          {};
+
+        setItemData(item);
       } catch (error) {
         toast.error("Failed to load data");
       } finally {
@@ -121,7 +132,7 @@ export default function EditInventoryItemPage() {
     }
   };
 
-  if (loading) {
+  if (id === null || loading) {
     return (
       <div className="text-center p-5">
         <Spinner animation="border" variant="primary" />
