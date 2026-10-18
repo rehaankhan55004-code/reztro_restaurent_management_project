@@ -8,6 +8,10 @@ export const adminService = {
 
   getAdminByEmail(email) {
     return api.get(`/admins/email/${email}`);
-  }
+  },
+
+  updateAdmin(id, data) {
+    return api.put(`/admins/${id}`, data);
+  },
 
 };

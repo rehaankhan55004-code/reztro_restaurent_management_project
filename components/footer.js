@@ -18,7 +18,7 @@ export default function Footer() {
 
             {/* Copyright */}
             <span className="text-muted">
-              Copyright © 2025 Peterdraw
+              Copyright © 2026 Indixpert
             </span>
 
             {/* Links (single line on mobile) */}

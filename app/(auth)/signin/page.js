@@ -41,12 +41,17 @@ const SignInPage = () => {
 
   const onSubmit = async (data) => {
     try {
+      // 1. Authenticate user through AuthService
       await AuthService.login(data.email, data.password);
 
+      // 2. Set your cookie session tracker
       document.cookie = "isLoggedIn=true; path=/; max-age=86400; SameSite=Strict; Secure";
 
-      await api.post("/admins");
+      // 3. Remove the invalid empty post call: await api.post("/admins");
+      // If you need to fetch the admin details post-login, use adminService instead:
+      // await adminService.getAdminByEmail(data.email);
 
+      // 4. Redirect smoothly to dashboard
       router.push("/dashboard");
     } catch (err) {
       alert(err.message || "Login or Database synchronization failed.");

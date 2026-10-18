@@ -1,108 +1,92 @@
-import "@/helper/cognito";
-import {
-  signUp,
-  confirmSignUp,
-  resendSignUpCode,
-  signIn,
-  signOut,
-  resetPassword,
-  confirmResetPassword,
-  getCurrentUser,
-  fetchAuthSession,
-} from "aws-amplify/auth";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const AuthService = {
   // 1. Signup/Register User
   async register(data) {
-    return await signUp({
-      username: data.email,
-      password: data.password,
-      options: {
-        userAttributes: {
-          email: data.email,
-          name: data.fullName,
-        },
-      },
+    const response = await fetch(`${API_URL}/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.fullName,
+        email: data.email,
+        password: data.password,
+      }),
     });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.detail || "Registration failed");
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user", JSON.stringify(result.user));
+      document.cookie = "isLoggedIn=true; path=/; max-age=86400; SameSite=Strict";
+    }
+
+    return result;
   },
 
-  // 2. Verify Signup OTP
+  // 2. Verify Signup OTP (Skipped for local mode)
   async verifySignup(email, code) {
-    return await confirmSignUp({
-      username: email,
-      confirmationCode: code,
-    });
+    return { message: "Email verification skipped for local mode." };
   },
 
-  // 3. Resend OTP for Signup
+  // 3. Resend OTP for Signup (Skipped for local mode)
   async resendSignupOTP(email) {
-    return await resendSignUpCode({
-      username: email,
-    });
+    return { message: "OTP resend skipped for local mode." };
   },
 
-  // 4. Login User (Saves and Returns Tokens)
+  // 4. Login User
   async login(email, password) {
-    const { isSignedIn, nextStep } = await signIn({
-      username: email,
-      password,
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (!isSignedIn && nextStep?.signInStep !== "DONE") {
-      throw new Error(nextStep?.signInStep || "Login failed");
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.detail || "Login failed");
     }
 
-    const session = await fetchAuthSession();
-    const accessToken = session.tokens?.accessToken?.toString();
-    const idToken = session.tokens?.idToken?.toString();
-
-    if (!accessToken || !idToken) {
-      throw new Error("Token not found from AWS Cognito Session");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user", JSON.stringify(result.user));
+      document.cookie = "isLoggedIn=true; path=/; max-age=86400; SameSite=Strict";
     }
 
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("idToken", idToken);
-
-    return { accessToken, idToken };
+    return result;
   },
 
   // 5. Logout User
-  async logout() {
-    await signOut();
-
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("idToken");
-    localStorage.clear();
-
-    document.cookie =
-      "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
+ async logout() {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
+      localStorage.clear();
+      
+      // Explicitly match path=/ and secure flags to successfully delete the cookie
+      document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Strict;";
+    }
   },
-
-  // 6. Forgot Password (Triggers OTP)
+  // 6. Forgot Password (Skipped for local mode)
   async forgotPassword(email) {
-    return await resetPassword({
-      username: email,
-    });
+    throw new Error("Password reset is not configured for local mode.");
   },
 
-  // 7. Reset Password (Submits OTP & New Password together)
+  // 7. Reset Password (Skipped for local mode)
   async resetPassword(email, code, password) {
-    return await confirmResetPassword({
-      username: email,
-      confirmationCode: code,
-      newPassword: password,
-    });
+    throw new Error("Password reset is not configured for local mode.");
   },
 
   // 8. Get Current Auth User
   async currentUser() {
-    return await getCurrentUser();
+    if (typeof window === "undefined") return null;
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
   },
 
-  // 9. Helper to get active ID token string
+  // 9. Helper to get active user ID
   async token() {
-    const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString();
+    const user = await this.currentUser();
+    return user ? user.id : null;
   },
 };

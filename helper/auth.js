@@ -1,5 +1,4 @@
 export const isAuthenticated = () => {
-
   if (typeof window === "undefined") return false;
 
   return document.cookie
@@ -9,13 +8,9 @@ export const isAuthenticated = () => {
 };
 
 export const login = () => {
-
-  document.cookie =
-    "isLoggedIn=true; path=/";
+  document.cookie = "isLoggedIn=true; path=/; max-age=86400; SameSite=Strict";
 };
 
 export const logout = () => {
-
-  document.cookie =
-    "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+  document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 };

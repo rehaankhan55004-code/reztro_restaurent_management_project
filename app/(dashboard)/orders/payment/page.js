@@ -24,6 +24,14 @@ function PaymentContent() {
     const searchParams = useSearchParams();
 
     const id = searchParams.get("id");
+    if (!id) {
+        return (
+            <div className="bg-dashboard py-4 min-vh-100 d-flex justify-content-center align-items-center">
+                <Spinner animation="border" variant="primary" />
+                <span className="ms-2">Loading payment parameters...</span>
+            </div>
+        );
+    }
 
     const { order, loading, error } = useOrderDetails(id);
 

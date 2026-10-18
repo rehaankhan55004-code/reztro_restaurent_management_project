@@ -40,6 +40,22 @@ export default function MessagesPage() {
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const [currentAdmin, setCurrentAdmin] = useState({ id: "1", role: "admin" });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          setCurrentAdmin({ id: String(user.id), role: "admin" });
+        } catch (e) {
+          console.error("Failed to parse user session", e);
+        }
+      }
+    }
+  }, []);
+
   // Search & Filter Status
   const [searchQuery, setSearchQuery] = useState("");
   const [activeRoleFilter, setActiveRoleFilter] = useState("all");
@@ -64,7 +80,6 @@ export default function MessagesPage() {
 
   const isUserAtBottom = useRef(true);
 
-  const currentAdmin = { id: "14", role: "admin" };
 
   useEffect(() => {
     activeChatIdRef.current = selectedConversation?.conversation_id || null;
@@ -188,6 +203,7 @@ export default function MessagesPage() {
   };
 
   // --- WEBSOCKET CONNECTION ---
+  // --- WEBSOCKET CONNECTION ---
   const connectWebSocket = (conversationId) => {
     if (socketRef.current) {
       socketRef.current.onclose = null;
@@ -195,16 +211,22 @@ export default function MessagesPage() {
       socketRef.current.close();
     }
 
-    const token = localStorage.getItem("accessToken");
-
-    const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_BASE_URL;
-
-    if (!token) {
-      console.error("JWT Token not found.");
-      return;
+    // Grab the local admin session ID (e.g. 15)
+    const userStr = localStorage.getItem("user");
+    let adminId = "1";
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        adminId = user.id || "1";
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
     }
 
-    const wsUrl = `${WS_BASE_URL}/${conversationId}?token=${encodeURIComponent(token)}`;
+    const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || "ws://localhost:8000/ws/chat";
+
+    // Connect using local admin_id query param instead of missing token
+    const wsUrl = `${WS_BASE_URL}/${conversationId}?admin_id=${adminId}`;
 
     socketRef.current = new WebSocket(wsUrl);
 
@@ -232,7 +254,7 @@ export default function MessagesPage() {
       }
     };
 
-    socketRef.current.onerror = (error) => {
+    socketRef.current.onerror = () => {
       startHTTPPollingFallback(conversationId);
     };
 
@@ -242,7 +264,7 @@ export default function MessagesPage() {
       }
     };
   };
-
+  
   const startHTTPPollingFallback = (conversationId) => {
     if (pollingRef.current) clearInterval(pollingRef.current);
 

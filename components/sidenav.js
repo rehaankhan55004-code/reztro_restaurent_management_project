@@ -26,6 +26,22 @@ import { AuthService } from "@/services/authService";
 export default function Sidenav() {
   const router = useRouter();
 
+  // Robust shared logout handler
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      // Hard redirect to clear React memory state and route caches
+      window.location.href = "/signin";
+    }
+  };
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -55,10 +71,7 @@ export default function Sidenav() {
             {/* LOGOUT */}
             <Button
               type="button"
-              onClick={async () => {
-                await AuthService.logout();
-                router.replace("/signin");
-              }}
+              onClick={handleLogout}
               className="w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 border-0 bg-primary text-white fw-semibold py-2"
             >
               <BoxArrowRight size={18} />
@@ -89,10 +102,7 @@ export default function Sidenav() {
           <div className="mt-auto pt-3 border-top w-100 d-flex justify-content-center">
             <Button
               type="button"
-              onClick={async () => {
-                await AuthService.logout();
-                router.replace("/signin");
-              }}
+              onClick={handleLogout}
               className="border-0 bg-light text-secondary d-flex align-items-center justify-content-center rounded-3 p-2"
               style={{ width: "42px", height: "42px" }}
               title="Logout"

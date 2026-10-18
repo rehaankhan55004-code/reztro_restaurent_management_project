@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect  } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,6 +31,7 @@ import {
     Truck,
     WindowStack,
     BoxArrowRight,
+    PersonCircle,
 } from "react-bootstrap-icons";
 
 import { AuthService } from "@/services/authService";
@@ -239,7 +240,7 @@ export default function Header() {
                             <Gear />
                         </Button>
 
-                        <div className="d-flex align-items-center gap-2 ms-2">
+                        {/* <div className="d-flex align-items-center gap-2 ms-2">
                             <div className="text-end lh-sm">
                                 <div className="fw-semibold">
                                     {admin?.full_name || ""}
@@ -257,7 +258,51 @@ export default function Header() {
                                 height={38}
                                 className="rounded-circle"
                             />
-                        </div>
+                        </div> */}
+                        <Dropdown align="end">
+                            <Dropdown.Toggle
+                                as="div"
+                                className="d-flex align-items-center gap-2 ms-2 border-0 bg-transparent cursor-pointer"
+                                style={{ cursor: "pointer" }}
+                                bsPrefix=" "
+                            >
+                                <div className="text-end lh-sm">
+                                    <div className="fw-semibold">
+                                        {admin?.full_name || ""}
+                                    </div>
+
+                                    <small className="text-muted">
+                                        {admin?.role || ""}
+                                    </small>
+                                </div>
+
+                                <Image
+                                    src="/Symbol.svg"
+                                    alt="User"
+                                    width={38}
+                                    height={38}
+                                    className="rounded-circle"
+                                />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="shadow border-0 rounded-3">
+                                <Dropdown.Item onClick={() => router.push("/profile")}>
+                                    <PersonCircle className="me-2" />
+                                    Profile
+                                </Dropdown.Item>
+                                <Dropdown.Divider />
+                                <Dropdown.Item
+                                    className="text-danger"
+                                    onClick={async () => {
+                                        await AuthService.logout();
+                                        router.replace("/signin");
+                                    }}
+                                >
+                                    <BoxArrowRight className="me-2" />
+                                    Logout
+                                </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
                     </div>
 
                     {/* MOBILE BUTTON */}
